@@ -174,8 +174,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
   white-space: nowrap; border: 0;
 }
 
-/* Tabular figures + preserved spaces so a decode never shifts layout. */
-.ws-scramble { font-variant-numeric: tabular-nums; white-space: pre; }
+/* Tabular figures + preserved spaces so a decode never shifts layout.
+   pre-wrap keeps spaces during the scramble while still allowing titles to wrap. */
+.ws-scramble { font-variant-numeric: tabular-nums; white-space: pre-wrap; }
 
 /* ── Custom cursor ─────────────────────────────────────────── */
 .ws-cursor {

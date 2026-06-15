@@ -364,10 +364,9 @@ export default function InteractiveBrandGrid({
           continue;
         }
 
-        // connectors + fragments: fade in, and react to the cursor
+        // connectors + fragments: fade in, and subtly repel away from the cursor
         let ox = 0;
         let oy = 0;
-        let glow = 0;
         if (pointerOn) {
           const dx = s.cx - px;
           const dy = s.cy - py;
@@ -377,37 +376,10 @@ export default function InteractiveBrandGrid({
             const f = 1 - d / RADIUS;
             ox = (dx / d) * f * PUSH;
             oy = (dy / d) * f * PUSH;
-            glow = f;
           }
         }
         ctx.globalAlpha = lp;
         ctx.fillRect(s.x + ox, s.y + oy, s.w, s.h);
-        if (glow > 0.12) {
-          const sz = LINE_W + glow * glow * 3.5;
-          ctx.globalAlpha = Math.min(1, lp * glow * 1.1);
-          ctx.fillRect(s.cx + ox - sz / 2, s.cy + oy - sz / 2, sz, sz);
-        }
-      }
-
-      // glowing intersection nodes around the cursor
-      if (pointerOn) {
-        const unit = unitProp;
-        const c0 = Math.floor((px - RADIUS - offsetX) / unit);
-        const c1 = Math.ceil((px + RADIUS - offsetX) / unit);
-        const r0 = Math.floor((py - RADIUS) / unit);
-        const r1 = Math.ceil((py + RADIUS) / unit);
-        for (let c = c0; c <= c1; c++) {
-          const nx = c * unit + offsetX;
-          for (let rr = r0; rr <= r1; rr++) {
-            const nyp = rr * unit;
-            const d = Math.hypot(nx - px, nyp - py);
-            if (d >= RADIUS) continue;
-            const f = 1 - d / RADIUS;
-            const sz = LINE_W + f * f * 4.5;
-            ctx.globalAlpha = f * 0.85;
-            ctx.fillRect(nx - sz / 2, nyp - sz / 2, sz, sz);
-          }
-        }
       }
 
       ctx.globalAlpha = 1;

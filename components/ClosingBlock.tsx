@@ -199,7 +199,7 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
                 paddingBottom: 3,
               }}
             >
-              {EMAIL}
+              <ScrambleText text={EMAIL} />
             </a>
             <span
               style={{
@@ -209,7 +209,7 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
                 letterSpacing: "1.4px",
               }}
             >
-              © 2026 Wieman Systems
+              <ScrambleText text="© 2026 Wieman Systems" />
             </span>
           </div>
         </div>

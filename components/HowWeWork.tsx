@@ -92,7 +92,7 @@ export default function HowWeWork() {
                   marginBottom: 14,
                 }}
               >
-                {s.title}
+                <ScrambleText text={s.title} />
               </h3>
               <p
                 style={{

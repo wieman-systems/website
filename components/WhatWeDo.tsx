@@ -53,7 +53,7 @@ export default function WhatWeDo() {
                   fontFamily: "var(--font-display), sans-serif",
                 }}
               >
-                {it.title}
+                <ScrambleText text={it.title} />
               </h3>
               <p
                 style={{
