@@ -1,5 +1,7 @@
 import SectionHead from "./SectionHead";
 import Plus from "./Plus";
+import Reveal from "./Reveal";
+import ScrambleText from "./ScrambleText";
 
 const steps = [
   {
@@ -52,8 +54,8 @@ export default function HowWeWork() {
           first map to the system running in production.
         </p>
         <div className="proc-grid">
-          {steps.map((s) => (
-            <div className="proc-step" key={s.id}>
+          {steps.map((s, i) => (
+            <Reveal className="proc-step" key={s.id} delay={i * 0.09}>
               <div
                 style={{
                   display: "flex",
@@ -62,16 +64,15 @@ export default function HowWeWork() {
                   marginBottom: 22,
                 }}
               >
-                <span
+                <ScrambleText
+                  text={s.id}
                   style={{
                     fontFamily: "var(--font-mono), monospace",
                     fontWeight: 700,
                     fontSize: 13,
                     letterSpacing: "0.12em",
                   }}
-                >
-                  {s.id}
-                </span>
+                />
                 <span
                   style={{
                     flex: 1,
@@ -104,7 +105,7 @@ export default function HowWeWork() {
               >
                 {s.desc}
               </p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>

@@ -8,6 +8,7 @@ import HowWeWork from "@/components/HowWeWork";
 import StopDoing from "@/components/StopDoing";
 import ClosingBlock from "@/components/ClosingBlock";
 import BookModal from "@/components/BookModal";
+import CustomCursor from "@/components/CustomCursor";
 
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -15,6 +16,7 @@ export default function Home() {
 
   return (
     <>
+      <CustomCursor />
       <Header onBook={onBook} />
       <main>
         <Hero onBook={onBook} />

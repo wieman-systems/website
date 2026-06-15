@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import MagneticButton from "./MagneticButton";
 
 interface HeaderProps {
   onBook: () => void;
@@ -9,8 +10,6 @@ interface HeaderProps {
 
 export default function Header({ onBook }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
-  const [hovered, setHovered] = useState(false);
-  const [pressed, setPressed] = useState(false);
 
   useEffect(() => {
     const f = () => setScrolled(window.scrollY > 8);
@@ -18,8 +17,6 @@ export default function Header({ onBook }: HeaderProps) {
     window.addEventListener("scroll", f, { passive: true });
     return () => window.removeEventListener("scroll", f);
   }, []);
-
-  const btnBg = pressed ? "#333" : hovered ? "#222" : "#000";
 
   return (
     <header
@@ -92,29 +89,13 @@ export default function Header({ onBook }: HeaderProps) {
         </a>
 
         {/* CTA */}
-        <button
+        <MagneticButton
+          variant="solid-dark"
           onClick={onBook}
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => { setHovered(false); setPressed(false); }}
-          onMouseDown={() => setPressed(true)}
-          onMouseUp={() => setPressed(false)}
-          style={{
-            fontFamily: "var(--font-display), sans-serif",
-            fontWeight: 600,
-            fontSize: 12,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            padding: "11px 22px",
-            background: btnBg,
-            color: "#fff",
-            border: "1px solid #000",
-            whiteSpace: "nowrap",
-            transition: "background 80ms linear",
-            transform: pressed ? "translate(1px,1px)" : "none",
-          }}
+          style={{ padding: "11px 22px", fontSize: 12, letterSpacing: "0.1em" }}
         >
           Book a call
-        </button>
+        </MagneticButton>
       </div>
     </header>
   );

@@ -1,3 +1,5 @@
+import ScrambleText from "./ScrambleText";
+
 interface SectionHeadProps {
   index: string;
   label: string;
@@ -37,15 +39,14 @@ export default function SectionHead({
           justifyContent: align === "center" ? "center" : "flex-start",
         }}
       >
-        <span
+        <ScrambleText
+          text={index}
           style={{
             fontFamily: "var(--font-mono), monospace",
             fontWeight: 700,
             color: ruleColor,
           }}
-        >
-          {index}
-        </span>
+        />
         <span
           style={{
             width: 22,
@@ -55,7 +56,7 @@ export default function SectionHead({
             display: "inline-block",
           }}
         />
-        {label}
+        <ScrambleText text={label} />
       </div>
       <h2
         style={{

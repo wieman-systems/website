@@ -1,21 +1,66 @@
 "use client";
 
-import { useRef, useState } from "react";
-import BrandGrid from "./BrandGrid";
+import { useRef } from "react";
+import { useGSAP } from "@gsap/react";
+import { gsap, SplitText, prefersReducedMotion } from "@/lib/motion";
+import InteractiveBrandGrid from "./InteractiveBrandGrid";
 import BlueprintGrid from "./BlueprintGrid";
+import MagneticButton from "./MagneticButton";
 
 interface HeroProps {
   onBook: () => void;
 }
 
 export default function Hero({ onBook }: HeroProps) {
-  const heroBtnRef = useRef<HTMLButtonElement>(null);
+  const heroRef = useRef<HTMLElement>(null);
+  const heroBtnRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const leadRef = useRef<HTMLParagraphElement>(null);
-  const [bh, setBh] = useState(false);
+
+  // Staggered, line-by-line clip-mask reveal for the headline.
+  useGSAP(
+    () => {
+      const h1 = headingRef.current;
+      if (!h1 || prefersReducedMotion()) return;
+
+      gsap.set(h1, { autoAlpha: 0 });
+      let split: SplitText | null = null;
+      let ran = false;
+
+      const run = () => {
+        if (ran) return;
+        ran = true;
+        split = new SplitText(h1, {
+          type: "lines",
+          mask: "lines",
+          linesClass: "ws-h1-line",
+        });
+        gsap.set(h1, { autoAlpha: 1 });
+        gsap.from(split.lines, {
+          yPercent: 118,
+          duration: 1.05,
+          ease: "power4.out",
+          stagger: 0.14,
+          onComplete: () => split?.revert(),
+        });
+      };
+
+      // Split only once webfonts are ready so line breaks are measured right,
+      // with a timeout fallback so the headline can never get stuck hidden.
+      document.fonts?.ready.then(run);
+      const t = window.setTimeout(run, 400);
+
+      return () => {
+        window.clearTimeout(t);
+        split?.revert();
+      };
+    },
+    { scope: heroRef }
+  );
 
   return (
     <section
+      ref={heroRef}
       id="top"
       className="hero-shell"
       style={{
@@ -28,10 +73,8 @@ export default function Hero({ onBook }: HeroProps) {
         flexDirection: "column",
       }}
     >
-      {/* Dense pitch-black brand grid: base + right-side climb + floaters.
-          Clear the grid around the actual heading/lead/CTA boxes so it adapts
-          to however the copy wraps (esp. on mobile) instead of a fixed rect. */}
-      <BrandGrid
+      {/* Dynamic, cursor-reactive brand grid that draws itself in on load. */}
+      <InteractiveBrandGrid
         color="#000"
         height="100%"
         opacity={1}
@@ -39,6 +82,8 @@ export default function Hero({ onBook }: HeroProps) {
         offsetX={0}
         fragRate={0.044}
         rightBias={1}
+        interactive
+        drawIn
         clearTargets={[
           { ref: headingRef, padX: 14, padTop: 10, padBottom: 12 },
           { ref: leadRef, padX: 14, padTop: 8, padBottom: 10 },
@@ -108,32 +153,16 @@ export default function Hero({ onBook }: HeroProps) {
           Innovative technology solutions that drive performance and growth.
         </p>
 
-        <button
-          ref={heroBtnRef}
-          onClick={onBook}
-          onMouseEnter={() => setBh(true)}
-          onMouseLeave={() => setBh(false)}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 16,
-            alignSelf: "flex-start",
-            fontFamily: "var(--font-display), sans-serif",
-            fontWeight: 600,
-            fontSize: 13,
-            letterSpacing: "0.16em",
-            textTransform: "uppercase",
-            whiteSpace: "nowrap",
-            padding: "17px 30px",
-            background: bh ? "#000" : "transparent",
-            color: bh ? "#fff" : "#000",
-            border: "1px solid #000",
-            transition: "background 100ms linear, color 100ms linear",
-          }}
-        >
-          Book a call{" "}
-          <span style={{ fontSize: 16, lineHeight: 1 }}>&rarr;</span>
-        </button>
+        <div ref={heroBtnRef} style={{ display: "inline-flex" }}>
+          <MagneticButton
+            variant="outline-dark"
+            onClick={onBook}
+            style={{ letterSpacing: "0.16em" }}
+          >
+            Book a call
+            <span style={{ fontSize: 16, lineHeight: 1 }}>&rarr;</span>
+          </MagneticButton>
+        </div>
       </div>
     </section>
   );

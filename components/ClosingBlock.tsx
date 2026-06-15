@@ -1,10 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import Image from "next/image";
-import BrandGrid from "./BrandGrid";
+import InteractiveBrandGrid from "./InteractiveBrandGrid";
 import BlueprintGrid from "./BlueprintGrid";
 import Plus from "./Plus";
+import MagneticButton from "./MagneticButton";
+import ScrambleText from "./ScrambleText";
 
 const EMAIL = "caleb@wiemansystems.com";
 
@@ -16,10 +18,6 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
   const ctaRef = useRef<HTMLHeadingElement>(null);
   const logoRef = useRef<HTMLAnchorElement>(null);
   const mailRef = useRef<HTMLAnchorElement>(null);
-  const [hovered, setHovered] = useState(false);
-  const [pressed, setPressed] = useState(false);
-
-  const btnBg = pressed ? "rgba(200,200,200,1)" : hovered ? "rgba(230,230,230,1)" : "#fff";
 
   return (
     <section
@@ -33,7 +31,7 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
         flexDirection: "column",
       }}
     >
-      <BrandGrid
+      <InteractiveBrandGrid
         color="#fff"
         height="82%"
         opacity={0.9}
@@ -41,6 +39,8 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
         offsetX={0}
         fragRate={0.042}
         edgeBias={0.95}
+        interactive
+        drawIn
         clearTargets={[
           ctaRef,
           logoRef,
@@ -84,7 +84,7 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
             }}
           >
             <Plus size={12} color="#fff" opacity={0.55} />
-            Start here
+            <ScrambleText text="Start here" />
           </div>
           <h2
             className="cta-h2"
@@ -98,34 +98,14 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
           >
             Find out what your team could stop doing by hand.
           </h2>
-          <button
+          <MagneticButton
+            variant="solid-light"
             onClick={onBook}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => { setHovered(false); setPressed(false); }}
-            onMouseDown={() => setPressed(true)}
-            onMouseUp={() => setPressed(false)}
-            style={{
-              fontFamily: "var(--font-display), sans-serif",
-              fontWeight: 600,
-              fontSize: 13,
-              letterSpacing: "0.05em",
-              textTransform: "uppercase",
-              padding: "15px 30px",
-              background: btnBg,
-              color: "#000",
-              border: "1px solid #fff",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              whiteSpace: "nowrap",
-              boxShadow: hovered && !pressed ? "4px 4px 0 var(--color-gray-600)" : "none",
-              transform: pressed ? "translate(2px,2px)" : "none",
-              transition:
-                "box-shadow 80ms linear, transform 80ms linear, background 80ms linear",
-            }}
+            style={{ padding: "15px 30px", letterSpacing: "0.05em" }}
           >
-            Book a call &nbsp;&rarr;
-          </button>
+            Book a call
+            <span style={{ fontSize: 16, lineHeight: 1 }}>&rarr;</span>
+          </MagneticButton>
         </div>
 
         {/* spacer — grid rises through this */}

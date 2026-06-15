@@ -1,4 +1,6 @@
 import SectionHead from "./SectionHead";
+import Reveal from "./Reveal";
+import ScrambleText from "./ScrambleText";
 
 const items = [
   {
@@ -31,8 +33,8 @@ export default function WhatWeDo() {
           title="Systems built, run, and owned end-to-end."
         />
         <div className="wd-grid">
-          {items.map((it) => (
-            <div className="wd-item" key={it.id}>
+          {items.map((it, i) => (
+            <Reveal className="wd-item" key={it.id} delay={i * 0.09}>
               <div
                 style={{
                   fontFamily: "var(--font-mono), monospace",
@@ -42,7 +44,7 @@ export default function WhatWeDo() {
                   marginBottom: 24,
                 }}
               >
-                {it.id}
+                <ScrambleText text={it.id} />
               </div>
               <h3
                 className="wd-title"
@@ -64,7 +66,7 @@ export default function WhatWeDo() {
               >
                 {it.desc}
               </p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>
