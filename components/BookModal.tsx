@@ -63,13 +63,20 @@ export default function BookModal({ open, onClose }: BookModalProps) {
   });
   const [sent, setSent] = useState(false);
   const [btnH, setBtnH] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [hp, setHp] = useState(""); // honeypot
 
   const upd = (k: keyof FormState) => (v: string) =>
     setForm((f) => ({ ...f, [k]: v }));
 
   useEffect(() => {
     if (!open) {
-      const id = setTimeout(() => setSent(false), 200);
+      const id = setTimeout(() => {
+        setSent(false);
+        setError(null);
+        setSubmitting(false);
+      }, 200);
       return () => clearTimeout(id);
     }
     const onKey = (e: KeyboardEvent) => {
@@ -83,6 +90,30 @@ export default function BookModal({ open, onClose }: BookModalProps) {
 
   const valid =
     form.name.trim() && /\S+@\S+\.\S+/.test(form.email);
+
+  const submit = async () => {
+    if (!valid || submitting) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, company_website: hp }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error || "Something went wrong. Please try again.");
+      }
+      setSent(true);
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Something went wrong. Please try again."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div
@@ -232,10 +263,27 @@ export default function BookModal({ open, onClose }: BookModalProps) {
               onChange={upd("need")}
               placeholder="Describe the manual work…"
             />
+            {/* Honeypot: hidden from people, catches bots that fill every field */}
+            <input
+              type="text"
+              name="company_website"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden
+              value={hp}
+              onChange={(e) => setHp(e.target.value)}
+              style={{
+                position: "absolute",
+                left: "-9999px",
+                width: 1,
+                height: 1,
+                opacity: 0,
+              }}
+            />
             <div style={{ marginTop: 28 }}>
               <button
-                disabled={!valid}
-                onClick={() => setSent(true)}
+                disabled={!valid || submitting}
+                onClick={submit}
                 style={{
                   width: "100%",
                   fontFamily: "var(--font-display), sans-serif",
@@ -244,16 +292,29 @@ export default function BookModal({ open, onClose }: BookModalProps) {
                   letterSpacing: "0.08em",
                   textTransform: "uppercase",
                   padding: "15px 24px",
-                  background: valid ? "#000" : "var(--color-gray-300)",
-                  color: valid ? "#fff" : "var(--color-gray-500)",
+                  background: valid && !submitting ? "#000" : "var(--color-gray-300)",
+                  color: valid && !submitting ? "#fff" : "var(--color-gray-500)",
                   border: "1px solid",
-                  borderColor: valid ? "#000" : "var(--color-gray-300)",
-                  cursor: valid ? "pointer" : "default",
+                  borderColor: valid && !submitting ? "#000" : "var(--color-gray-300)",
+                  cursor: valid && !submitting ? "pointer" : "default",
                   transition: "background 80ms linear, color 80ms linear",
                 }}
               >
-                Request a call
+                {submitting ? "Sending…" : "Request a call"}
               </button>
+              {error && (
+                <p
+                  style={{
+                    marginTop: 14,
+                    fontFamily: "var(--font-mono), monospace",
+                    fontSize: 12,
+                    lineHeight: 1.5,
+                    color: "#b00020",
+                  }}
+                >
+                  {error}
+                </p>
+              )}
             </div>
           </div>
         )}
