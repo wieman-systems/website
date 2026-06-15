@@ -51,9 +51,26 @@ interface Seg {
 
 const LINE_W = 1.5;
 const DRAW_MS = 1500;
-const RADIUS = 150; // cursor influence radius (css px)
-const PUSH = 7; // max block displacement (css px)
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+const smoothstep = (e0: number, e1: number, x: number) => {
+  const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
+  return t * t * (3 - 2 * t);
+};
+
+// ── Living-grid tuning ──────────────────────────────────────────────────
+// Instead of nudging each line on its own, the whole grid flows through one
+// continuous warp field, so it stretches like a single elastic sheet and
+// swells (grows) toward whatever is deforming it. Dial these toward the
+// "noticeable" values in the comments when we want more presence.
+const CURSOR_RADIUS = 175; // cursor influence radius (css px)
+const GROW_CURSOR = 0.18; // magnification under the cursor (~0.32 = noticeable)
+const CURSOR_THROB = 0.1; // gentle breathing of the cursor bulge
+const AMB_COUNT = 2; // roaming swells drifting under the surface
+const AMB_RADIUS = 230; // roaming-swell influence radius (css px)
+const AMB_AMP = 0.06; // roaming-swell magnification (~0.1 = noticeable)
+const ANCHOR_PIN = 22; // px above the baseline kept rooted to the floor
+const SUBDIV_STEP = 9; // px between warp samples along a line
+const MAX_SUBDIV = 80; // max samples per line (perf guard)
 
 export default function InteractiveBrandGrid({
   color = "#fff",
@@ -310,7 +327,10 @@ export default function InteractiveBrandGrid({
       const mx = e.clientX - r.left;
       const my = e.clientY - r.top;
       const inside =
-        mx > -RADIUS && mx < W + RADIUS && my > -RADIUS && my < H + RADIUS;
+        mx > -CURSOR_RADIUS &&
+        mx < W + CURSOR_RADIUS &&
+        my > -CURSOR_RADIUS &&
+        my < H + CURSOR_RADIUS;
       target.active = inside;
       if (inside) {
         target.x = mx;
@@ -328,6 +348,94 @@ export default function InteractiveBrandGrid({
       target.active = false;
     };
 
+    // ── Living-grid state: roaming swells feeding one continuous warp field
+    const ambientOn = !reduce;
+    let visible = false;
+    let docVisible = !document.hidden;
+    let lastFrame = 0;
+    let cursorAmt = 0; // eased cursor strength so the bulge fades in/out
+    let io: IntersectionObserver | null = null;
+
+    // Slow Lissajous drifters that wander under the surface ("alive").
+    const AMB = Array.from({ length: AMB_COUNT }, () => ({
+      ax: 0.36 + Math.random() * 0.1,
+      ay: 0.3 + Math.random() * 0.12,
+      sx: 0.00018 + Math.random() * 0.00016, // rad/ms → ~25–60s drift
+      sy: 0.00016 + Math.random() * 0.00016,
+      px: Math.random() * Math.PI * 2,
+      py: Math.random() * Math.PI * 2,
+      tw: 0.0011 + Math.random() * 0.0009, // swell breathing rate
+      tp: Math.random() * Math.PI * 2,
+    }));
+
+    type Deformer = { x: number; y: number; r: number; amp: number };
+    let deformers: Deformer[] = [];
+
+    // Sum of radial magnifications. Pinned to the baseline so the skyline
+    // stays rooted to the floor while everything above stretches as one sheet.
+    const warp = (x: number, y: number): [number, number] => {
+      if (deformers.length === 0) return [x, y];
+      const pin = smoothstep(0, ANCHOR_PIN, H - y);
+      if (pin <= 0) return [x, y];
+      let wx = x;
+      let wy = y;
+      for (let i = 0; i < deformers.length; i++) {
+        const d = deformers[i];
+        const vx = x - d.x;
+        const vy = y - d.y;
+        const dist = Math.sqrt(vx * vx + vy * vy);
+        if (dist >= d.r) continue;
+        const f = 1 - (dist / d.r) ** 2;
+        const sc = d.amp * f * f * pin;
+        wx += vx * sc;
+        wy += vy * sc;
+      }
+      return [wx, wy];
+    };
+
+    // Cheap circle-vs-segment-bounds test to skip lines outside the field.
+    const influenced = (ax: number, ay: number, bx: number, by: number) => {
+      const minx = Math.min(ax, bx);
+      const maxx = Math.max(ax, bx);
+      const miny = Math.min(ay, by);
+      const maxy = Math.max(ay, by);
+      for (let i = 0; i < deformers.length; i++) {
+        const d = deformers[i];
+        const nx = d.x < minx ? minx : d.x > maxx ? maxx : d.x;
+        const ny = d.y < miny ? miny : d.y > maxy ? maxy : d.y;
+        const dx = d.x - nx;
+        const dy = d.y - ny;
+        if (dx * dx + dy * dy < d.r * d.r) return true;
+      }
+      return false;
+    };
+
+    // Centerline endpoints of a segment, so a warped stroke lines up exactly
+    // with the unwarped fillRects at the edge of the field (no seam).
+    const segEnds = (s: Seg): [number, number, number, number] => {
+      if (s.kind === 0) {
+        const cx = s.x + LINE_W / 2;
+        return [cx, s.y, cx, s.bottomY];
+      }
+      if (s.w >= s.h) {
+        const cy = s.y + s.h / 2;
+        return [s.x, cy, s.x + s.w, cy];
+      }
+      const cx = s.x + s.w / 2;
+      return [cx, s.y, cx, s.y + s.h];
+    };
+
+    const addWarped = (ax: number, ay: number, bx: number, by: number) => {
+      const len = Math.hypot(bx - ax, by - ay);
+      const n = Math.min(MAX_SUBDIV, Math.max(2, Math.ceil(len / SUBDIV_STEP)));
+      for (let i = 0; i <= n; i++) {
+        const u = i / n;
+        const [wx, wy] = warp(ax + (bx - ax) * u, ay + (by - ay) * u);
+        if (i === 0) ctx.moveTo(wx, wy);
+        else ctx.lineTo(wx, wy);
+      }
+    };
+
     // ── Render
     let revealStart = reduce || !drawIn ? -1 : 0; // -1 => fully settled
     const render = () => {
@@ -336,62 +444,110 @@ export default function InteractiveBrandGrid({
       if (revealStart > 0) P = Math.min(1, (now - revealStart) / DRAW_MS);
       else if (revealStart === 0) P = 0; // armed but not yet started
 
-      // smooth pointer toward target
-      if (canInteract && target.active) {
-        cur.x += (target.x - cur.x) * 0.18;
-        cur.y += (target.y - cur.y) * 0.18;
-      }
-      const px = cur.x;
-      const py = cur.y;
+      const armed = revealStart === 0;
+      const playingIn = revealStart > 0 && P < 1;
       const pointerOn = canInteract && target.active;
+      const recentlyMoved = canInteract && now - lastMove < 600;
+      const ambientActive = ambientOn && visible && docVisible;
+      const highRate =
+        pointerOn || playingIn || recentlyMoved || cursorAmt > 0.002;
+
+      // Ambient-only frames run at ~30fps to spare battery; cursor reactions
+      // and the draw-in get full frame rate.
+      if (!highRate && ambientActive && now - lastFrame < 32) {
+        raf = requestAnimationFrame(render);
+        return;
+      }
+      lastFrame = now;
 
       ctx.clearRect(0, 0, W, H);
       ctx.fillStyle = color;
 
-      for (const s of segments) {
-        let lp = 1;
-        if (P < 1) {
-          const win = s.kind === 0 ? 0.45 : 0.32;
-          lp = easeOut(Math.min(1, Math.max(0, (P - s.appear) / win)));
-          if (lp <= 0) continue;
-        }
-
-        if (s.kind === 0) {
-          // trunk grows up from the baseline
-          ctx.globalAlpha = Math.min(1, lp * 1.6);
-          const h = s.h * lp;
-          ctx.fillRect(s.x, s.bottomY - h, s.w, h);
-          continue;
-        }
-
-        // connectors + fragments: fade in, and subtly repel away from the cursor
-        let ox = 0;
-        let oy = 0;
-        if (pointerOn) {
-          const dx = s.cx - px;
-          const dy = s.cy - py;
-          const d2 = dx * dx + dy * dy;
-          if (d2 < RADIUS * RADIUS) {
-            const d = Math.sqrt(d2) || 1;
-            const f = 1 - d / RADIUS;
-            ox = (dx / d) * f * PUSH;
-            oy = (dy / d) * f * PUSH;
-          }
-        }
-        ctx.globalAlpha = lp;
-        ctx.fillRect(s.x + ox, s.y + oy, s.w, s.h);
+      if (armed) {
+        // Off-screen, nothing has drawn in yet.
+        raf = 0;
+        return;
       }
 
+      // ── Draw-in: clean assembly, warp held back until it settles ────────
+      if (playingIn) {
+        for (const s of segments) {
+          const win = s.kind === 0 ? 0.45 : 0.32;
+          const lp = easeOut(Math.min(1, Math.max(0, (P - s.appear) / win)));
+          if (lp <= 0) continue;
+          if (s.kind === 0) {
+            ctx.globalAlpha = Math.min(1, lp * 1.6);
+            ctx.fillRect(s.x, s.bottomY - s.h * lp, s.w, s.h * lp);
+          } else {
+            ctx.globalAlpha = lp;
+            ctx.fillRect(s.x, s.y, s.w, s.h);
+          }
+        }
+        ctx.globalAlpha = 1;
+        applyClears();
+        raf = requestAnimationFrame(render);
+        return;
+      }
+
+      // ── Settled: build the deformer field (cursor + roaming swells) ─────
+      if (pointerOn) {
+        cur.x += (target.x - cur.x) * 0.18;
+        cur.y += (target.y - cur.y) * 0.18;
+      }
+      cursorAmt += ((pointerOn ? 1 : 0) - cursorAmt) * 0.12;
+
+      deformers = [];
+      if (cursorAmt > 0.002) {
+        const throb = 1 + CURSOR_THROB * Math.sin(now * 0.004);
+        deformers.push({
+          x: cur.x,
+          y: cur.y,
+          r: CURSOR_RADIUS,
+          amp: GROW_CURSOR * throb * cursorAmt,
+        });
+      }
+      if (ambientOn) {
+        for (let i = 0; i < AMB_COUNT; i++) {
+          const a = AMB[i];
+          deformers.push({
+            x: W * (0.5 + a.ax * Math.sin(now * a.sx + a.px)),
+            y: H * (0.5 + a.ay * Math.sin(now * a.sy + a.py)),
+            r: AMB_RADIUS,
+            amp: AMB_AMP * (0.6 + 0.4 * Math.sin(now * a.tw + a.tp)),
+          });
+        }
+      }
+
+      // Lines outside the field paint as cheap rects; influenced lines bend
+      // through it as subdivided polylines, so the grid stretches as one piece.
       ctx.globalAlpha = 1;
+      ctx.beginPath();
+      for (const s of segments) {
+        const [ax, ay, bx, by] = segEnds(s);
+        if (deformers.length && influenced(ax, ay, bx, by)) {
+          addWarped(ax, ay, bx, by);
+        } else {
+          ctx.fillRect(s.x, s.y, s.w, s.h);
+        }
+      }
+      ctx.strokeStyle = color;
+      ctx.lineWidth = LINE_W;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.stroke();
+
       applyClears();
 
-      // keep animating while drawing in, or while the cursor is engaged
       const settling =
-        canInteract &&
-        target.active &&
+        pointerOn &&
         (Math.abs(target.x - cur.x) > 0.4 || Math.abs(target.y - cur.y) > 0.4);
-      const recentlyMoved = canInteract && now - lastMove < 600;
-      if ((revealStart > 0 && P < 1) || pointerOn || settling || recentlyMoved) {
+      if (
+        pointerOn ||
+        settling ||
+        recentlyMoved ||
+        ambientActive ||
+        cursorAmt > 0.002
+      ) {
         raf = requestAnimationFrame(render);
       } else {
         raf = 0;
@@ -411,22 +567,21 @@ export default function InteractiveBrandGrid({
         return;
       }
       booted = true;
-      if (revealStart === 0) {
-        // arm the draw-in for when the grid actually scrolls into view
-        const io = new IntersectionObserver(
-          (entries, obs) => {
-            for (const e of entries) {
-              if (e.isIntersecting) {
-                revealStart = performance.now();
-                obs.disconnect();
-                ensureRunning();
-              }
+      // Track on-screen state to drive the roaming swells, and arm the
+      // draw-in the first time the grid scrolls into view.
+      io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            visible = e.isIntersecting;
+            if (e.isIntersecting) {
+              if (revealStart === 0) revealStart = performance.now();
+              ensureRunning();
             }
-          },
-          { threshold: 0.12 }
-        );
-        io.observe(canvas);
-      }
+          }
+        },
+        { threshold: 0.06 }
+      );
+      io.observe(canvas);
       render(); // paint current state immediately
     };
     boot();
@@ -437,18 +592,26 @@ export default function InteractiveBrandGrid({
       render();
     };
 
+    const onVis = () => {
+      docVisible = !document.hidden;
+      if (docVisible) ensureRunning();
+    };
+
     const ro = new ResizeObserver(onResize);
     ro.observe(canvas);
     window.addEventListener("resize", onResize);
     if (canInteract) window.addEventListener("mousemove", onMove, { passive: true });
     document.addEventListener("mouseleave", onLeave);
+    document.addEventListener("visibilitychange", onVis);
 
     return () => {
       if (raf) cancelAnimationFrame(raf);
       ro.disconnect();
+      io?.disconnect();
       window.removeEventListener("resize", onResize);
       if (canInteract) window.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseleave", onLeave);
+      document.removeEventListener("visibilitychange", onVis);
     };
   }, [
     color,
