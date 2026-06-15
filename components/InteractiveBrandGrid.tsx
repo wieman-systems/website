@@ -58,19 +58,17 @@ const smoothstep = (e0: number, e1: number, x: number) => {
 };
 
 // ── Living-grid tuning ──────────────────────────────────────────────────
-// Instead of nudging each line on its own, the whole grid flows through one
-// continuous warp field, so it stretches like a single elastic sheet and
-// swells (grows) toward whatever is deforming it. Dial these toward the
-// "noticeable" values in the comments when we want more presence.
-const CURSOR_RADIUS = 175; // cursor influence radius (css px)
-const GROW_CURSOR = 0.18; // magnification under the cursor (~0.32 = noticeable)
-const CURSOR_THROB = 0.1; // gentle breathing of the cursor bulge
-const AMB_COUNT = 2; // roaming swells drifting under the surface
-const AMB_RADIUS = 230; // roaming-swell influence radius (css px)
-const AMB_AMP = 0.06; // roaming-swell magnification (~0.1 = noticeable)
-const ANCHOR_PIN = 22; // px above the baseline kept rooted to the floor
-const SUBDIV_STEP = 9; // px between warp samples along a line
-const MAX_SUBDIV = 80; // max samples per line (perf guard)
+// The existing lines never move. Instead, fresh lattice (extra lines + whole
+// squares) grows in on the grid's own lattice to "meet" the cursor, then
+// sucks back when it leaves. Dial these toward the bolder values to taste.
+const REVEAL_RADIUS = 132; // how far the bloom reaches from the cursor (css px)
+const REVEAL_CORE = 0.22; // inner fraction that reveals fully (rest eases out)
+const RISE = 0.2; // grow-in speed — how fast it reaches out to meet you
+const FALL = 0.07; // suck-back speed — slower, so it lingers then recedes
+const CURSOR_THROB = 0.08; // gentle breathing of the bloom strength
+const AMB_COUNT = 2; // idle blooms that drift when there's no cursor
+const AMB_RADIUS = 110; // idle-bloom reach (css px)
+const AMB_AMP = 0.45; // idle-bloom strength (set 0 to disable idle life)
 
 export default function InteractiveBrandGrid({
   color = "#fff",
@@ -327,10 +325,10 @@ export default function InteractiveBrandGrid({
       const mx = e.clientX - r.left;
       const my = e.clientY - r.top;
       const inside =
-        mx > -CURSOR_RADIUS &&
-        mx < W + CURSOR_RADIUS &&
-        my > -CURSOR_RADIUS &&
-        my < H + CURSOR_RADIUS;
+        mx > -REVEAL_RADIUS &&
+        mx < W + REVEAL_RADIUS &&
+        my > -REVEAL_RADIUS &&
+        my < H + REVEAL_RADIUS;
       target.active = inside;
       if (inside) {
         target.x = mx;
@@ -348,15 +346,15 @@ export default function InteractiveBrandGrid({
       target.active = false;
     };
 
-    // ── Living-grid state: roaming swells feeding one continuous warp field
+    // ── Living grid: a bloom that grows fresh lattice to meet the cursor ──
     const ambientOn = !reduce;
     let visible = false;
     let docVisible = !document.hidden;
     let lastFrame = 0;
-    let cursorAmt = 0; // eased cursor strength so the bulge fades in/out
+    let cursorAmt = 0; // eased cursor strength so the bloom fades in/out
     let io: IntersectionObserver | null = null;
 
-    // Slow Lissajous drifters that wander under the surface ("alive").
+    // Slow Lissajous drifters: idle blooms that wander when there's no cursor.
     const AMB = Array.from({ length: AMB_COUNT }, () => ({
       ax: 0.36 + Math.random() * 0.1,
       ay: 0.3 + Math.random() * 0.12,
@@ -364,75 +362,68 @@ export default function InteractiveBrandGrid({
       sy: 0.00016 + Math.random() * 0.00016,
       px: Math.random() * Math.PI * 2,
       py: Math.random() * Math.PI * 2,
-      tw: 0.0011 + Math.random() * 0.0009, // swell breathing rate
+      tw: 0.0011 + Math.random() * 0.0009, // breathing rate
       tp: Math.random() * Math.PI * 2,
     }));
 
-    type Deformer = { x: number; y: number; r: number; amp: number };
-    let deformers: Deformer[] = [];
+    // Lattice helpers (same lattice the base grid is built on).
+    const colX = (c: number) => c * unitProp + offsetX;
+    const yRow = (r: number) => r * unitProp + unitProp / 2;
 
-    // Sum of radial magnifications. Pinned to the baseline so the skyline
-    // stays rooted to the floor while everything above stretches as one sheet.
-    const warp = (x: number, y: number): [number, number] => {
-      if (deformers.length === 0) return [x, y];
-      const pin = smoothstep(0, ANCHOR_PIN, H - y);
-      if (pin <= 0) return [x, y];
-      let wx = x;
-      let wy = y;
-      for (let i = 0; i < deformers.length; i++) {
-        const d = deformers[i];
-        const vx = x - d.x;
-        const vy = y - d.y;
-        const dist = Math.sqrt(vx * vx + vy * vy);
-        if (dist >= d.r) continue;
-        const f = 1 - (dist / d.r) ** 2;
-        const sc = d.amp * f * f * pin;
-        wx += vx * sc;
-        wy += vy * sc;
-      }
-      return [wx, wy];
+    // Reveal strength of a point under a bloom: 1 in the core, eased to 0 at
+    // the rim. Closer segments rise first, so the grid reaches out to meet you.
+    const reveal = (
+      mx: number,
+      my: number,
+      sx: number,
+      sy: number,
+      r: number
+    ) => {
+      const d = Math.hypot(mx - sx, my - sy);
+      return d >= r ? 0 : smoothstep(r, r * REVEAL_CORE, d);
     };
 
-    // Cheap circle-vs-segment-bounds test to skip lines outside the field.
-    const influenced = (ax: number, ay: number, bx: number, by: number) => {
-      const minx = Math.min(ax, bx);
-      const maxx = Math.max(ax, bx);
-      const miny = Math.min(ay, by);
-      const maxy = Math.max(ay, by);
-      for (let i = 0; i < deformers.length; i++) {
-        const d = deformers[i];
-        const nx = d.x < minx ? minx : d.x > maxx ? maxx : d.x;
-        const ny = d.y < miny ? miny : d.y > maxy ? maxy : d.y;
-        const dx = d.x - nx;
-        const dy = d.y - ny;
-        if (dx * dx + dy * dy < d.r * d.r) return true;
-      }
-      return false;
+    // Per-lattice-segment growth, keyed "orient,c,r". Each frame g eases toward
+    // its target reveal (fast up, slow down) and scales an extra line in/out.
+    const grow = new Map<string, number>();
+    const tgt = new Map<string, number>(); // rebuilt each frame
+
+    const bump = (key: string, t: number) => {
+      const prev = tgt.get(key);
+      if (prev === undefined || t > prev) tgt.set(key, t);
     };
 
-    // Centerline endpoints of a segment, so a warped stroke lines up exactly
-    // with the unwarped fillRects at the edge of the field (no seam).
-    const segEnds = (s: Seg): [number, number, number, number] => {
-      if (s.kind === 0) {
-        const cx = s.x + LINE_W / 2;
-        return [cx, s.y, cx, s.bottomY];
+    // Mark the lattice segments a bloom touches (one horizontal + one vertical
+    // edge per node → whole squares fill in).
+    const addBloom = (sx: number, sy: number, r: number, amp: number) => {
+      const c0 = Math.floor((sx - r - offsetX) / unitProp);
+      const c1 = Math.ceil((sx + r - offsetX) / unitProp);
+      const r0 = Math.floor((sy - r) / unitProp) - 1;
+      const r1 = Math.ceil((sy + r) / unitProp) + 1;
+      for (let c = c0; c <= c1; c++) {
+        const x = colX(c);
+        for (let rr = r0; rr <= r1; rr++) {
+          const y = yRow(rr);
+          const th = amp * reveal(x + unitProp / 2, y, sx, sy, r);
+          if (th > 0.002) bump(`h,${c},${rr}`, th);
+          const tv = amp * reveal(x, y + unitProp / 2, sx, sy, r);
+          if (tv > 0.002) bump(`v,${c},${rr}`, tv);
+        }
       }
-      if (s.w >= s.h) {
-        const cy = s.y + s.h / 2;
-        return [s.x, cy, s.x + s.w, cy];
-      }
-      const cx = s.x + s.w / 2;
-      return [cx, s.y, cx, s.y + s.h];
     };
 
-    const addWarped = (ax: number, ay: number, bx: number, by: number) => {
-      const len = Math.hypot(bx - ax, by - ay);
-      const n = Math.min(MAX_SUBDIV, Math.max(2, Math.ceil(len / SUBDIV_STEP)));
-      for (let i = 0; i <= n; i++) {
-        const u = i / n;
-        const [wx, wy] = warp(ax + (bx - ax) * u, ay + (by - ay) * u);
-        if (i === 0) ctx.moveTo(wx, wy);
-        else ctx.lineTo(wx, wy);
+    const drawCell = (key: string, g: number) => {
+      const p = key.split(",");
+      const c = +p[1];
+      const r = +p[2];
+      const e = 0.72 + 0.28 * easeOut(Math.min(1, g)); // slight draw-in
+      const x = colX(c);
+      const y = yRow(r);
+      ctx.globalAlpha = Math.min(1, g * 1.25);
+      if (p[0] === "h") {
+        ctx.fillRect(x - LINE_W / 2, y - LINE_W / 2, unitProp * e + LINE_W, LINE_W);
+      } else {
+        ctx.fillRect(x - LINE_W / 2, y - LINE_W / 2, LINE_W, unitProp * e + LINE_W);
       }
     };
 
@@ -489,64 +480,63 @@ export default function InteractiveBrandGrid({
         return;
       }
 
-      // ── Settled: build the deformer field (cursor + roaming swells) ─────
+      // ── Settled: static base grid + a bloom of fresh lattice ──────────
       if (pointerOn) {
         cur.x += (target.x - cur.x) * 0.18;
         cur.y += (target.y - cur.y) * 0.18;
       }
       cursorAmt += ((pointerOn ? 1 : 0) - cursorAmt) * 0.12;
 
-      deformers = [];
+      // base grid stays exactly where it is — no warping
+      ctx.globalAlpha = 1;
+      for (const s of segments) ctx.fillRect(s.x, s.y, s.w, s.h);
+
+      // gather reveal targets from the cursor and the idle blooms
+      tgt.clear();
       if (cursorAmt > 0.002) {
         const throb = 1 + CURSOR_THROB * Math.sin(now * 0.004);
-        deformers.push({
-          x: cur.x,
-          y: cur.y,
-          r: CURSOR_RADIUS,
-          amp: GROW_CURSOR * throb * cursorAmt,
-        });
+        addBloom(cur.x, cur.y, REVEAL_RADIUS, cursorAmt * throb);
       }
       if (ambientOn) {
         for (let i = 0; i < AMB_COUNT; i++) {
           const a = AMB[i];
-          deformers.push({
-            x: W * (0.5 + a.ax * Math.sin(now * a.sx + a.px)),
-            y: H * (0.5 + a.ay * Math.sin(now * a.sy + a.py)),
-            r: AMB_RADIUS,
-            amp: AMB_AMP * (0.6 + 0.4 * Math.sin(now * a.tw + a.tp)),
-          });
+          const breath = 0.6 + 0.4 * Math.sin(now * a.tw + a.tp);
+          addBloom(
+            W * (0.5 + a.ax * Math.sin(now * a.sx + a.px)),
+            H * (0.5 + a.ay * Math.sin(now * a.sy + a.py)),
+            AMB_RADIUS,
+            AMB_AMP * breath
+          );
         }
       }
 
-      // Lines outside the field paint as cheap rects; influenced lines bend
-      // through it as subdivided polylines, so the grid stretches as one piece.
+      // ease persistent growth toward the targets, draw, and prune the dead
+      for (const [key, g] of grow) {
+        const t = tgt.get(key) ?? 0;
+        const next = g + (t - g) * (t > g ? RISE : FALL);
+        if (next < 0.004 && t <= 0) {
+          grow.delete(key);
+          continue;
+        }
+        grow.set(key, next);
+        tgt.delete(key);
+        drawCell(key, next);
+      }
+      for (const [key, t] of tgt) {
+        const next = t * RISE;
+        grow.set(key, next);
+        drawCell(key, next);
+      }
+
       ctx.globalAlpha = 1;
-      ctx.beginPath();
-      for (const s of segments) {
-        const [ax, ay, bx, by] = segEnds(s);
-        if (deformers.length && influenced(ax, ay, bx, by)) {
-          addWarped(ax, ay, bx, by);
-        } else {
-          ctx.fillRect(s.x, s.y, s.w, s.h);
-        }
-      }
-      ctx.strokeStyle = color;
-      ctx.lineWidth = LINE_W;
-      ctx.lineJoin = "round";
-      ctx.lineCap = "round";
-      ctx.stroke();
-
       applyClears();
 
-      const settling =
-        pointerOn &&
-        (Math.abs(target.x - cur.x) > 0.4 || Math.abs(target.y - cur.y) > 0.4);
       if (
         pointerOn ||
-        settling ||
         recentlyMoved ||
         ambientActive ||
-        cursorAmt > 0.002
+        cursorAmt > 0.002 ||
+        grow.size > 0
       ) {
         raf = requestAnimationFrame(render);
       } else {
