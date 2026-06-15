@@ -30,6 +30,7 @@ body {
 img, svg, canvas { display: block; }
 button { cursor: pointer; }
 a { color: inherit; text-decoration: none; }
+button, a { -webkit-tap-highlight-color: transparent; }
 
 /* ── Layout util ───────────────────────────────────────────── */
 .ws-wrap {
@@ -39,6 +40,12 @@ a { color: inherit; text-decoration: none; }
   padding-right: var(--gutter);
   width: 100%;
 }
+
+/* Full-bleed section heights — use a stable small-viewport unit on mobile so
+   the showing/hiding of the browser URL bar doesn't resize the hero or jump
+   the layout. Falls back to vh where svh is unsupported. */
+.hero-shell { min-height: calc(100vh - 74px); min-height: calc(100svh - 74px); }
+.cta-shell { min-height: 90vh; min-height: 90svh; }
 
 /* ── Labels ────────────────────────────────────────────────── */
 .eyebrow {
@@ -98,12 +105,15 @@ a { color: inherit; text-decoration: none; }
 .modal-backdrop {
   position: fixed; inset: 0; z-index: 1000;
   background: rgba(0,0,0,0.55);
-  display: flex; align-items: center; justify-content: center; padding: 24px;
+  display: flex; align-items: center; justify-content: center;
+  padding: clamp(16px, 5vw, 24px);
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
   animation: fadein 140ms linear;
 }
 .modal-panel {
   background: #fff; border: 1px solid #000; box-shadow: 8px 8px 0 #000;
-  width: 100%; max-width: 480px; position: relative; animation: rise 160ms linear;
+  width: 100%; max-width: 480px; position: relative; margin: auto;
+  animation: rise 160ms linear;
 }
 @keyframes fadein { from { opacity: 0 } to { opacity: 1 } }
 @keyframes rise { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
@@ -114,7 +124,7 @@ a { color: inherit; text-decoration: none; }
 }
 .field input, .field textarea {
   width: 100%; border: none; border-bottom: 1px solid var(--color-gray-300);
-  background: transparent; font-size: 15px; color: #000;
+  background: transparent; font-size: 16px; color: #000;
   padding: 6px 0 10px; outline: none; transition: border-color 100ms linear;
 }
 .field input:focus, .field textarea:focus { border-color: #000; }
@@ -137,4 +147,18 @@ a { color: inherit; text-decoration: none; }
   }
   .stop-grid { grid-template-columns: 1fr; }
   .hide-mobile { display: none !important; }
+
+  /* Hero headline: let the two phrases wrap instead of clipping, and give
+     it a confident mobile size that still fits the narrowest phones. */
+  .hero-h1 { font-size: clamp(33px, 9vw, 46px); line-height: 1.1; }
+  .hero-h1 .hl { white-space: normal; }
+
+  /* StopDoing: keep number + task on the first line and drop the
+     "→ AUTOMATED" tag onto its own indented line below. */
+  .stop-row { flex-wrap: wrap; column-gap: 14px; row-gap: 6px; }
+  .stop-row .stop-tag { flex-basis: 100%; margin-left: 40px; }
+
+  /* Closing footer: stack and left-align cleanly when wrapped. */
+  .cta-footer { flex-direction: column; align-items: flex-start !important; gap: 30px !important; }
+  .cta-contact { align-items: flex-start !important; text-align: left !important; }
 }

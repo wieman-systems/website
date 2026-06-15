@@ -10,23 +10,27 @@ interface HeroProps {
 
 export default function Hero({ onBook }: HeroProps) {
   const heroBtnRef = useRef<HTMLButtonElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const leadRef = useRef<HTMLParagraphElement>(null);
   const [bh, setBh] = useState(false);
 
   return (
     <section
       id="top"
+      className="hero-shell"
       style={{
         position: "relative",
         overflow: "hidden",
         background: "#fff",
         color: "#000",
         borderBottom: "1px solid #000",
-        minHeight: "calc(100vh - 74px)",
         display: "flex",
         flexDirection: "column",
       }}
     >
-      {/* Dense pitch-black brand grid: base + right-side climb + floaters */}
+      {/* Dense pitch-black brand grid: base + right-side climb + floaters.
+          Clear the grid around the actual heading/lead/CTA boxes so it adapts
+          to however the copy wraps (esp. on mobile) instead of a fixed rect. */}
       <BrandGrid
         color="#000"
         height="100%"
@@ -35,8 +39,11 @@ export default function Hero({ onBook }: HeroProps) {
         offsetX={0}
         fragRate={0.044}
         rightBias={1}
-        clearRects={[{ x0: 0, x1: 0.64, y0: 0.24, y1: 0.68 }]}
-        clearTargets={[heroBtnRef]}
+        clearTargets={[
+          { ref: headingRef, padX: 14, padTop: 10, padBottom: 12 },
+          { ref: leadRef, padX: 14, padTop: 8, padBottom: 10 },
+          { ref: heroBtnRef, padX: 10, padTop: 8, padBottom: 8 },
+        ]}
       />
 
       {/* Subtle graph-paper overlay */}
@@ -57,10 +64,12 @@ export default function Hero({ onBook }: HeroProps) {
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "flex-start",
-          padding: "clamp(40px, 7vh, 96px) 0",
+          paddingTop: "clamp(40px, 7vh, 96px)",
+          paddingBottom: "clamp(40px, 7vh, 96px)",
         }}
       >
         <h1
+          ref={headingRef}
           className="hero-h1"
           style={{
             maxWidth: 1080,
@@ -86,6 +95,7 @@ export default function Hero({ onBook }: HeroProps) {
         />
 
         <p
+          ref={leadRef}
           style={{
             fontFamily: "var(--font-display), sans-serif",
             fontSize: "clamp(16px, 1.4vw, 19px)",

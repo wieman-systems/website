@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, Space_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -32,6 +32,11 @@ export const metadata: Metadata = {
     description: "Custom AI systems that do your team's busywork for you.",
   },
   metadataBase: new URL("https://wiemansystems.com"),
+};
+
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
+  colorScheme: "light",
 };
 
 export default function RootLayout({

@@ -49,6 +49,7 @@ export default function StopDoing() {
                 {task}
               </span>
               <span
+                className="stop-tag"
                 style={{
                   fontFamily: "var(--font-mono), monospace",
                   fontSize: 10,
