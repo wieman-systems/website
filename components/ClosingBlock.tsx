@@ -154,7 +154,7 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 16,
+              gap: "clamp(10px, 3vw, 16px)",
               textDecoration: "none",
               position: "relative",
             }}
@@ -164,7 +164,7 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
               alt="Wieman Systems"
               width={60}
               height={60}
-              style={{ height: 60, width: "auto" }}
+              style={{ height: "clamp(38px, 11vw, 60px)", width: "auto" }}
             />
             <span
               style={{ display: "flex", flexDirection: "column", lineHeight: 1.1 }}
@@ -173,7 +173,7 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
                 style={{
                   fontFamily: "var(--font-display), sans-serif",
                   fontWeight: 700,
-                  fontSize: 18,
+                  fontSize: "clamp(14px, 4.2vw, 18px)",
                   letterSpacing: "0.14em",
                   color: "#fff",
                 }}
@@ -184,7 +184,7 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
                 style={{
                   fontFamily: "var(--font-display), sans-serif",
                   fontWeight: 500,
-                  fontSize: 11,
+                  fontSize: "clamp(9px, 2.7vw, 11px)",
                   letterSpacing: "0.46em",
                   color: "#fff",
                   marginTop: 4,
@@ -211,7 +211,7 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
               ref={mailRef}
               style={{
                 fontFamily: "var(--font-mono), monospace",
-                fontSize: 15,
+                fontSize: "clamp(12px, 3.4vw, 15px)",
                 letterSpacing: "0.02em",
                 color: "#fff",
                 textDecoration: "none",
