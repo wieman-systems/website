@@ -23,12 +23,12 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
 
   return (
     <section
+      className="cta-shell"
       style={{
         position: "relative",
         background: "#000",
         color: "#fff",
         overflow: "hidden",
-        minHeight: "90vh",
         display: "flex",
         flexDirection: "column",
       }}
@@ -62,7 +62,8 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          padding: "clamp(92px, 15vh, 168px) 0 clamp(32px, 5vh, 56px)",
+          paddingTop: "clamp(92px, 15vh, 168px)",
+          paddingBottom: "clamp(32px, 5vh, 56px)",
         }}
       >
         {/* CTA */}
@@ -134,6 +135,7 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
 
         {/* Footer */}
         <div
+          className="cta-footer"
           style={{
             display: "flex",
             alignItems: "flex-end",
@@ -194,6 +196,7 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
           </a>
 
           <div
+            className="cta-contact"
             style={{
               display: "flex",
               flexDirection: "column",
