@@ -9,11 +9,15 @@ import { gsap, isFinePointer, prefersReducedMotion } from "@/lib/motion";
  * Expands over interactive elements. Only mounts for fine pointers and when
  * the visitor hasn't requested reduced motion — touch users keep their native
  * behaviour untouched.
+ *
+ * When `hidden` (e.g. a modal is open), it steps aside and restores the native
+ * cursor so form fields behave normally and you never see two cursors at once.
  */
-export default function CustomCursor() {
+export default function CustomCursor({ hidden = false }: { hidden?: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
   const dotRef = useRef<HTMLDivElement>(null);
+  const wasHidden = useRef(false);
 
   useEffect(() => {
     if (!isFinePointer() || prefersReducedMotion()) return;
@@ -78,6 +82,27 @@ export default function CustomCursor() {
       document.removeEventListener("mouseenter", onEnter);
     };
   }, []);
+
+  // Hand control back to the native cursor while hidden (e.g. modal open).
+  useEffect(() => {
+    if (!isFinePointer() || prefersReducedMotion()) return;
+    const root = rootRef.current;
+    const html = document.documentElement;
+    if (hidden) {
+      wasHidden.current = true;
+      html.classList.remove("ws-cursor-on");
+      if (root) {
+        root.style.opacity = "0";
+        root.style.visibility = "hidden";
+      }
+    } else {
+      html.classList.add("ws-cursor-on");
+      if (root && wasHidden.current) {
+        root.style.opacity = "1";
+        root.style.visibility = "visible";
+      }
+    }
+  }, [hidden]);
 
   return (
     <div ref={rootRef} className="ws-cursor" aria-hidden style={{ opacity: 0 }}>

@@ -16,7 +16,7 @@ export default function Home() {
 
   return (
     <>
-      <CustomCursor />
+      <CustomCursor hidden={modalOpen} />
       <Header onBook={onBook} />
       <main>
         <Hero onBook={onBook} />
