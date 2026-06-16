@@ -627,14 +627,8 @@ export default function InteractiveBrandGrid({
           const c = Math.round((s.x + LINE_W / 2 - offsetX) / unitProp);
           const e = smoothstep(0.55, 0.92, nodeNoise(c * 1.7, 11, et));
           if (e <= 0.002) continue;
-          const ext = e * EDGE_SHIMMER;
-          ctx.fillRect(s.x, s.y - ext, s.w, ext); // grow the trunk top up
-          // occasional grid tick at the new top so it reads as added lattice
-          const cap = smoothstep(0.7, 0.97, nodeNoise(c * 2.3 + 5, 19, et));
-          if (cap > 0.01) {
-            const w = unitProp * cap;
-            ctx.fillRect(s.x - w / 2, s.y - ext - LINE_W / 2, w + LINE_W, LINE_W);
-          }
+          // grow the trunk straight up its own column only — always on-grid
+          ctx.fillRect(s.x, s.y - e * EDGE_SHIMMER, s.w, e * EDGE_SHIMMER);
         }
       }
 
