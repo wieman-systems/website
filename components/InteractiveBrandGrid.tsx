@@ -58,17 +58,21 @@ const smoothstep = (e0: number, e1: number, x: number) => {
 };
 
 // ── Living-grid tuning ──────────────────────────────────────────────────
-// The existing lines never move. Instead, fresh lattice (extra lines + whole
-// squares) grows in on the grid's own lattice to "meet" the cursor, then
-// sucks back when it leaves. Dial these toward the bolder values to taste.
-const REVEAL_RADIUS = 132; // how far the bloom reaches from the cursor (css px)
-const REVEAL_CORE = 0.22; // inner fraction that reveals fully (rest eases out)
-const RISE = 0.2; // grow-in speed — how fast it reaches out to meet you
-const FALL = 0.07; // suck-back speed — slower, so it lingers then recedes
-const CURSOR_THROB = 0.08; // gentle breathing of the bloom strength
-const AMB_COUNT = 2; // idle blooms that drift when there's no cursor
-const AMB_RADIUS = 110; // idle-bloom reach (css px)
-const AMB_AMP = 0.45; // idle-bloom strength (set 0 to disable idle life)
+// The existing lines never move and never fade. Instead, solid-black lattice
+// (extra lines + whole squares) grows in on the grid's own lattice to "meet"
+// the cursor, then recedes from the outside in when it leaves. It's drawn as a
+// level set: an eased field over the lattice, solid wherever it's >= THRESH,
+// with the frontier edges clipped to the crossing so they draw in by length.
+const REVEAL_RADIUS = 138; // base reach of the bloom from the cursor (css px)
+const REVEAL_CORE = 0.2; // inner fraction at full strength (rest eases out)
+const REVEAL_THRESH = 0.4; // level-set cutoff — at/above this the grid is solid
+const RISE = 0.24; // grow-in speed — reaching out to meet you
+const FALL = 0.06; // suck-back speed — slower, recedes from the outside in
+const WOBBLE = 0.36; // organic distortion of the bloom edge (0 = plain circle)
+const CURSOR_THROB = 0.1; // gentle breathing of the bloom size
+const AMB_COUNT = 3; // idle blooms that drift when there's no cursor
+const AMB_RADIUS = 104; // idle-bloom reach (css px)
+const AMB_AMP = 0.66; // idle-bloom strength (set 0 to disable idle life)
 
 export default function InteractiveBrandGrid({
   color = "#fff",
@@ -364,67 +368,105 @@ export default function InteractiveBrandGrid({
       py: Math.random() * Math.PI * 2,
       tw: 0.0011 + Math.random() * 0.0009, // breathing rate
       tp: Math.random() * Math.PI * 2,
+      seed: Math.random() * 100, // distinct organic shape per bloom
     }));
 
     // Lattice helpers (same lattice the base grid is built on).
     const colX = (c: number) => c * unitProp + offsetX;
     const yRow = (r: number) => r * unitProp + unitProp / 2;
 
-    // Reveal strength of a point under a bloom: 1 in the core, eased to 0 at
-    // the rim. Closer segments rise first, so the grid reaches out to meet you.
-    const reveal = (
-      mx: number,
-      my: number,
-      sx: number,
-      sy: number,
-      r: number
-    ) => {
-      const d = Math.hypot(mx - sx, my - sy);
-      return d >= r ? 0 : smoothstep(r, r * REVEAL_CORE, d);
-    };
-
-    // Per-lattice-segment growth, keyed "orient,c,r". Each frame g eases toward
-    // its target reveal (fast up, slow down) and scales an extra line in/out.
+    // Field of the lattice NODES: g eases toward a target reveal, the grid is
+    // solid wherever g >= REVEAL_THRESH, and the frontier edges are clipped to
+    // the crossing. grow holds the eased field; tgt is rebuilt each frame.
     const grow = new Map<string, number>();
-    const tgt = new Map<string, number>(); // rebuilt each frame
+    const tgt = new Map<string, number>();
+    let wobT = 0; // shared time phase for the organic edge
 
     const bump = (key: string, t: number) => {
       const prev = tgt.get(key);
       if (prev === undefined || t > prev) tgt.set(key, t);
     };
 
-    // Mark the lattice segments a bloom touches (one horizontal + one vertical
-    // edge per node → whole squares fill in).
-    const addBloom = (sx: number, sy: number, r: number, amp: number) => {
-      const c0 = Math.floor((sx - r - offsetX) / unitProp);
-      const c1 = Math.ceil((sx + r - offsetX) / unitProp);
-      const r0 = Math.floor((sy - r) / unitProp) - 1;
-      const r1 = Math.ceil((sy + r) / unitProp) + 1;
+    // Reveal strength at a node: 1 in the core, eased to 0 at an organic,
+    // time-varying radius so the bloom is a living blob, not a clean circle.
+    const reveal = (
+      mx: number,
+      my: number,
+      sx: number,
+      sy: number,
+      r: number,
+      seed: number
+    ) => {
+      const dx = mx - sx;
+      const dy = my - sy;
+      const d = Math.hypot(dx, dy);
+      if (d >= r * 1.4) return 0;
+      const ang = Math.atan2(dy, dx);
+      const wob =
+        1 +
+        WOBBLE *
+          (0.5 * Math.sin(3 * ang + wobT * 1.3 + seed) +
+            0.3 * Math.sin(5 * ang - wobT * 0.9 + seed * 1.7) +
+            0.2 * Math.sin(2 * ang + wobT * 2.1));
+      const rr = r * wob;
+      return d >= rr ? 0 : smoothstep(rr, rr * REVEAL_CORE, d);
+    };
+
+    const addBloom = (
+      sx: number,
+      sy: number,
+      r: number,
+      amp: number,
+      seed: number
+    ) => {
+      const maxR = r * 1.4;
+      const c0 = Math.floor((sx - maxR - offsetX) / unitProp);
+      const c1 = Math.ceil((sx + maxR - offsetX) / unitProp);
+      const r0 = Math.floor((sy - maxR) / unitProp) - 1;
+      const r1 = Math.ceil((sy + maxR) / unitProp) + 1;
       for (let c = c0; c <= c1; c++) {
         const x = colX(c);
         for (let rr = r0; rr <= r1; rr++) {
-          const y = yRow(rr);
-          const th = amp * reveal(x + unitProp / 2, y, sx, sy, r);
-          if (th > 0.002) bump(`h,${c},${rr}`, th);
-          const tv = amp * reveal(x, y + unitProp / 2, sx, sy, r);
-          if (tv > 0.002) bump(`v,${c},${rr}`, tv);
+          const t = amp * reveal(x, yRow(rr), sx, sy, r, seed);
+          if (t > 0.002) bump(`${c},${rr}`, t);
         }
       }
     };
 
-    const drawCell = (key: string, g: number) => {
-      const p = key.split(",");
-      const c = +p[1];
-      const r = +p[2];
-      const e = 0.72 + 0.28 * easeOut(Math.min(1, g)); // slight draw-in
-      const x = colX(c);
+    const gAt = (c: number, r: number) => grow.get(`${c},${r}`) ?? 0;
+
+    // Draw the horizontal edge (c,r)→(c+1,r), solid, clipped to the part of it
+    // that sits inside the level set (no fade, frontier draws/recedes by length).
+    const drawEdgeH = (c: number, r: number) => {
+      const g0 = gAt(c, r);
+      const g1 = gAt(c + 1, r);
+      const a0 = g0 >= REVEAL_THRESH;
+      const a1 = g1 >= REVEAL_THRESH;
+      if (!a0 && !a1) return;
+      const xn = colX(c);
       const y = yRow(r);
-      ctx.globalAlpha = Math.min(1, g * 1.25);
-      if (p[0] === "h") {
-        ctx.fillRect(x - LINE_W / 2, y - LINE_W / 2, unitProp * e + LINE_W, LINE_W);
-      } else {
-        ctx.fillRect(x - LINE_W / 2, y - LINE_W / 2, LINE_W, unitProp * e + LINE_W);
-      }
+      let x0 = xn;
+      let x1 = xn + unitProp;
+      if (a0 && !a1) x1 = xn + unitProp * ((g0 - REVEAL_THRESH) / (g0 - g1));
+      else if (!a0 && a1)
+        x0 = xn + unitProp - unitProp * ((g1 - REVEAL_THRESH) / (g1 - g0));
+      ctx.fillRect(x0 - LINE_W / 2, y - LINE_W / 2, x1 - x0 + LINE_W, LINE_W);
+    };
+
+    const drawEdgeV = (c: number, r: number) => {
+      const g0 = gAt(c, r);
+      const g1 = gAt(c, r + 1);
+      const a0 = g0 >= REVEAL_THRESH;
+      const a1 = g1 >= REVEAL_THRESH;
+      if (!a0 && !a1) return;
+      const x = colX(c);
+      const yn = yRow(r);
+      let y0 = yn;
+      let y1 = yn + unitProp;
+      if (a0 && !a1) y1 = yn + unitProp * ((g0 - REVEAL_THRESH) / (g0 - g1));
+      else if (!a0 && a1)
+        y0 = yn + unitProp - unitProp * ((g1 - REVEAL_THRESH) / (g1 - g0));
+      ctx.fillRect(x - LINE_W / 2, y0 - LINE_W / 2, LINE_W, y1 - y0 + LINE_W);
     };
 
     // ── Render
@@ -492,25 +534,27 @@ export default function InteractiveBrandGrid({
       for (const s of segments) ctx.fillRect(s.x, s.y, s.w, s.h);
 
       // gather reveal targets from the cursor and the idle blooms
+      wobT = now * 0.001;
       tgt.clear();
       if (cursorAmt > 0.002) {
         const throb = 1 + CURSOR_THROB * Math.sin(now * 0.004);
-        addBloom(cur.x, cur.y, REVEAL_RADIUS, cursorAmt * throb);
+        addBloom(cur.x, cur.y, REVEAL_RADIUS, cursorAmt * throb, 0);
       }
       if (ambientOn) {
         for (let i = 0; i < AMB_COUNT; i++) {
           const a = AMB[i];
-          const breath = 0.6 + 0.4 * Math.sin(now * a.tw + a.tp);
+          const breath = 0.85 + 0.15 * Math.sin(now * a.tw + a.tp);
           addBloom(
             W * (0.5 + a.ax * Math.sin(now * a.sx + a.px)),
             H * (0.5 + a.ay * Math.sin(now * a.sy + a.py)),
             AMB_RADIUS,
-            AMB_AMP * breath
+            AMB_AMP * breath,
+            a.seed
           );
         }
       }
 
-      // ease persistent growth toward the targets, draw, and prune the dead
+      // ease the node field toward the targets, then prune the dead
       for (const [key, g] of grow) {
         const t = tgt.get(key) ?? 0;
         const next = g + (t - g) * (t > g ? RISE : FALL);
@@ -520,15 +564,21 @@ export default function InteractiveBrandGrid({
         }
         grow.set(key, next);
         tgt.delete(key);
-        drawCell(key, next);
       }
-      for (const [key, t] of tgt) {
-        const next = t * RISE;
-        grow.set(key, next);
-        drawCell(key, next);
+      for (const [key, t] of tgt) grow.set(key, t * RISE);
+
+      // draw the level set: solid black, frontier edges clipped by length
+      ctx.globalAlpha = 1;
+      for (const key of grow.keys()) {
+        const p = key.split(",");
+        const c = +p[0];
+        const r = +p[1];
+        drawEdgeH(c, r);
+        drawEdgeV(c, r);
+        if (!grow.has(`${c - 1},${r}`)) drawEdgeH(c - 1, r);
+        if (!grow.has(`${c},${r - 1}`)) drawEdgeV(c, r - 1);
       }
 
-      ctx.globalAlpha = 1;
       applyClears();
 
       if (
