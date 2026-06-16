@@ -20,7 +20,7 @@ interface MagneticButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  */
 export default function MagneticButton({
   variant = "outline-dark",
-  strength = 0.34,
+  strength = 0.17,
   children,
   className,
   ...rest

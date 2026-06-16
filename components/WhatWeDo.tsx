@@ -1,6 +1,10 @@
 import SectionHead from "./SectionHead";
 import Reveal from "./Reveal";
 import ScrambleText from "./ScrambleText";
+import BlueprintGrid from "./BlueprintGrid";
+
+const SECTION_MASK =
+  "linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent)";
 
 const items = [
   {
@@ -22,10 +26,23 @@ const items = [
 
 export default function WhatWeDo() {
   return (
-    <section style={{ position: "relative", borderTop: "1px solid #000" }}>
+    <section
+      style={{ position: "relative", borderTop: "1px solid #000", overflow: "hidden" }}
+    >
+      <BlueprintGrid
+        color="#000"
+        opacity={0.05}
+        unit={52}
+        fade={false}
+        style={{ maskImage: SECTION_MASK, WebkitMaskImage: SECTION_MASK }}
+      />
       <div
         className="ws-wrap"
-        style={{ padding: "clamp(72px, 11vh, 128px) var(--gutter)" }}
+        style={{
+          position: "relative",
+          zIndex: 1,
+          padding: "clamp(72px, 11vh, 128px) var(--gutter)",
+        }}
       >
         <SectionHead
           index="01"
