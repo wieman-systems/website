@@ -68,12 +68,13 @@ const REVEAL_CORE = 0.2; // inner fraction at full strength (rest eases out)
 const REVEAL_THRESH = 0.4; // level-set cutoff — at/above this the grid is solid
 const RISE = 0.24; // grow-in speed — reaching out to meet you
 const FALL = 0.06; // suck-back speed — slower, recedes from the outside in
-const WOBBLE = 0.16; // low-frequency overall shape distortion of the bloom
+const WOBBLE = 0.34; // low-frequency shape distortion — higher = less circular
 const SPIKE = 0.46; // per-node rim roughness — higher = spikier / more fragmented
 const CURSOR_THROB = 0.1; // gentle breathing of the bloom size
-const AMB_COUNT = 3; // idle blooms that drift when there's no cursor
+const AMB_COUNT = 2; // idle blooms that drift when there's no cursor
 const AMB_RADIUS = 96; // idle-bloom reach (css px)
 const AMB_AMP = 0.66; // idle-bloom strength (set 0 to disable idle life)
+const EDGE_SHIMMER = 24; // px the skyline top edge grows/recedes as it shimmers
 // When the cursor nears an existing gridline, a thin grid-aligned strand draws
 // in to connect them. The lines themselves never move.
 const CONNECT_DIST = 160; // cursor-to-line distance at which a strand forms (px)
@@ -420,13 +421,13 @@ export default function InteractiveBrandGrid({
       const dx = colX(c) - sx;
       const dy = yRow(r) - sy;
       const d = Math.hypot(dx, dy);
-      if (d >= radius * 1.75) return 0;
+      if (d >= radius * 2) return 0;
       const ang = Math.atan2(dy, dx);
       const wob =
         1 +
         WOBBLE *
-          (0.6 * Math.sin(3 * ang + wobT * 1.1 + seed) +
-            0.4 * Math.sin(6 * ang - wobT * 0.8 + seed * 1.7));
+          (0.6 * Math.sin(2 * ang + wobT * 0.9 + seed) +
+            0.4 * Math.sin(3 * ang - wobT * 0.7 + seed * 1.7));
       const spike = 1 + SPIKE * (2 * nodeNoise(c + seed, r - seed, wobT * 0.7) - 1);
       const rr = radius * wob * spike;
       return d >= rr ? 0 : smoothstep(rr, radius * REVEAL_CORE, d);
@@ -439,7 +440,7 @@ export default function InteractiveBrandGrid({
       amp: number,
       seed: number
     ) => {
-      const maxR = r * 1.75;
+      const maxR = r * 2;
       const c0 = Math.floor((sx - maxR - offsetX) / unitProp);
       const c1 = Math.ceil((sx + maxR - offsetX) / unitProp);
       const r0 = Math.floor((sy - maxR) / unitProp) - 1;
@@ -615,9 +616,27 @@ export default function InteractiveBrandGrid({
       }
       cursorAmt += ((pointerOn ? 1 : 0) - cursorAmt) * 0.12;
 
-      // base grid stays exactly where it is — lines never move or bend
+      // base grid (straight, never bends) + a subtle ambient shimmer: short
+      // grid lines slowly add and recede along the skyline's top edge
       ctx.globalAlpha = 1;
       for (const s of segments) ctx.fillRect(s.x, s.y, s.w, s.h);
+      if (ambientOn) {
+        const et = now * 0.0005;
+        for (const s of segments) {
+          if (s.kind !== 0) continue; // trunks form the top edge
+          const c = Math.round((s.x + LINE_W / 2 - offsetX) / unitProp);
+          const e = smoothstep(0.55, 0.92, nodeNoise(c * 1.7, 11, et));
+          if (e <= 0.002) continue;
+          const ext = e * EDGE_SHIMMER;
+          ctx.fillRect(s.x, s.y - ext, s.w, ext); // grow the trunk top up
+          // occasional grid tick at the new top so it reads as added lattice
+          const cap = smoothstep(0.7, 0.97, nodeNoise(c * 2.3 + 5, 19, et));
+          if (cap > 0.01) {
+            const w = unitProp * cap;
+            ctx.fillRect(s.x - w / 2, s.y - ext - LINE_W / 2, w + LINE_W, LINE_W);
+          }
+        }
+      }
 
       // gather reveal targets from the cursor and the idle blooms
       wobT = now * 0.001;
