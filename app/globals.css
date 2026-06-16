@@ -242,8 +242,47 @@ html.ws-cursor-on .field input, html.ws-cursor-on .field textarea { cursor: text
   background: #000; transform: scaleY(0); transform-origin: top center;
 }
 
+/* ── Integrations marquee ──────────────────────────────────── */
+.marquee {
+  position: relative;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+}
+.marquee__track {
+  display: flex;
+  width: max-content;
+  flex-wrap: nowrap;
+  animation: ws-marquee 38s linear infinite;
+  will-change: transform;
+}
+.marquee:hover .marquee__track { animation-play-state: paused; }
+.marquee__item {
+  padding: 0 clamp(18px, 2.6vw, 42px);
+  font-family: var(--font-display), sans-serif;
+  font-weight: 500;
+  font-size: clamp(17px, 1.8vw, 24px);
+  letter-spacing: -0.01em;
+  color: var(--color-gray-500);
+  white-space: nowrap;
+  transition: color 160ms linear;
+}
+.marquee:hover .marquee__item:hover { color: #000; }
+@keyframes ws-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
 /* Respect reduced-motion: drop the bespoke cursor and snap transitions. */
 @media (prefers-reduced-motion: reduce) {
   .ws-cursor { display: none; }
   .ws-btn, .ws-btn::before { transition: none; }
+  .marquee { -webkit-mask-image: none; mask-image: none; }
+  .marquee__track {
+    animation: none;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 14px 0;
+  }
+  .marquee__item[data-dup] { display: none; }
 }

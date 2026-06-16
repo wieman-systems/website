@@ -6,19 +6,19 @@ const SECTION_MASK =
   "linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent)";
 
 // DRAFT answers — verify these against how you actually operate before launch
-// (especially ownership, data handling, and pricing).
+// (especially data handling and pricing).
 const faqs = [
   {
-    q: "Do I own the system you build?",
-    a: "Yes. The system, the code, and the data are yours. If we ever part ways, you keep everything and we hand over full access.",
+    q: "What kind of work can you automate?",
+    a: "If it's repetitive and spread across your tools — reporting, data entry, approvals, reconciliation, routing requests — it's usually a candidate. We build around your real workflow, not a template.",
   },
   {
     q: "Where does my data live, and is it secure?",
     a: "Your data stays in your own accounts and infrastructure. We build on the tools and cloud you already trust, with least-privilege access — we don't resell it or train models on it.",
   },
   {
-    q: "What happens if something breaks?",
-    a: "While we run it, monitoring and fixes are on us — you get the output, not the on-call. Most issues are caught and resolved before you'd ever notice.",
+    q: "Does my team need to be technical to use it?",
+    a: "No. We build around your existing workflow, so your team keeps working the way they already do — the automation just runs underneath.",
   },
   {
     q: "How long until the first system is live?",
@@ -26,11 +26,7 @@ const faqs = [
   },
   {
     q: "What does it cost?",
-    a: "Engagements start with a fixed-scope build, then an optional monthly fee to host, monitor, and keep improving it. Everything is scoped and priced before any work begins — no surprises.",
-  },
-  {
-    q: "Does my team need to be technical to use it?",
-    a: "No. We build around your existing workflow, so your team keeps working the way they already do — the automation just runs underneath.",
+    a: "Every engagement is scoped and priced up front — you approve a fixed scope before any work begins, so there are no surprises.",
   },
 ];
 
