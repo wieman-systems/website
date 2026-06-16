@@ -63,7 +63,7 @@ const smoothstep = (e0: number, e1: number, x: number) => {
 // the cursor, then recedes from the outside in when it leaves. It's drawn as a
 // level set: an eased field over the lattice, solid wherever it's >= THRESH,
 // with the frontier edges clipped to the crossing so they draw in by length.
-const REVEAL_RADIUS = 138; // base reach of the bloom from the cursor (css px)
+const REVEAL_RADIUS = 90; // base reach of the bloom around the cursor (css px)
 const REVEAL_CORE = 0.2; // inner fraction at full strength (rest eases out)
 const REVEAL_THRESH = 0.4; // level-set cutoff — at/above this the grid is solid
 const RISE = 0.24; // grow-in speed — reaching out to meet you
@@ -72,8 +72,13 @@ const WOBBLE = 0.16; // low-frequency overall shape distortion of the bloom
 const SPIKE = 0.46; // per-node rim roughness — higher = spikier / more fragmented
 const CURSOR_THROB = 0.1; // gentle breathing of the bloom size
 const AMB_COUNT = 3; // idle blooms that drift when there's no cursor
-const AMB_RADIUS = 104; // idle-bloom reach (css px)
+const AMB_RADIUS = 96; // idle-bloom reach (css px)
 const AMB_AMP = 0.66; // idle-bloom strength (set 0 to disable idle life)
+// Existing lines reach toward the cursor when it gets near (local, not global).
+const REACH_RADIUS = 80; // existing lines within this of the cursor reach for it
+const REACH_MAX = 34; // max px an existing line stretches toward the cursor
+const SUBDIV_STEP = 11; // px between samples when bending a reaching line
+const MAX_SUBDIV = 64; // cap samples per reaching line (perf guard)
 
 export default function InteractiveBrandGrid({
   color = "#fff",
@@ -485,6 +490,51 @@ export default function InteractiveBrandGrid({
       ctx.fillRect(x - LINE_W / 2, y0 - LINE_W / 2, LINE_W, y1 - y0 + LINE_W);
     };
 
+    // ── Existing lines stretch toward the cursor when it gets near ────────
+    const segEnds = (s: Seg): [number, number, number, number] => {
+      if (s.kind === 0) {
+        const cx = s.x + LINE_W / 2;
+        return [cx, s.y, cx, s.bottomY];
+      }
+      if (s.w >= s.h) {
+        const cy = s.y + s.h / 2;
+        return [s.x, cy, s.x + s.w, cy];
+      }
+      const cx = s.x + s.w / 2;
+      return [cx, s.y, cx, s.y + s.h];
+    };
+
+    // Pull a point toward the cursor — capped so a tip just meets it without
+    // overshooting, and faded out at REACH_RADIUS.
+    const reachPt = (x: number, y: number): [number, number] => {
+      const vx = cur.x - x;
+      const vy = cur.y - y;
+      const d = Math.hypot(vx, vy);
+      if (d >= REACH_RADIUS || d < 0.001) return [x, y];
+      const f = smoothstep(REACH_RADIUS, 0, d);
+      const k = Math.min(d, REACH_MAX * f * cursorAmt) / d;
+      return [x + vx * k, y + vy * k];
+    };
+
+    const nearReach = (ax: number, ay: number, bx: number, by: number) => {
+      const lo = (v: number, a: number, b: number) =>
+        v < Math.min(a, b) ? Math.min(a, b) : v > Math.max(a, b) ? Math.max(a, b) : v;
+      const dx = cur.x - lo(cur.x, ax, bx);
+      const dy = cur.y - lo(cur.y, ay, by);
+      return dx * dx + dy * dy < REACH_RADIUS * REACH_RADIUS;
+    };
+
+    const addReach = (ax: number, ay: number, bx: number, by: number) => {
+      const len = Math.hypot(bx - ax, by - ay);
+      const n = Math.min(MAX_SUBDIV, Math.max(2, Math.ceil(len / SUBDIV_STEP)));
+      for (let i = 0; i <= n; i++) {
+        const u = i / n;
+        const [wx, wy] = reachPt(ax + (bx - ax) * u, ay + (by - ay) * u);
+        if (i === 0) ctx.moveTo(wx, wy);
+        else ctx.lineTo(wx, wy);
+      }
+    };
+
     // ── Render
     let revealStart = reduce || !drawIn ? -1 : 0; // -1 => fully settled
     const render = () => {
@@ -545,9 +595,24 @@ export default function InteractiveBrandGrid({
       }
       cursorAmt += ((pointerOn ? 1 : 0) - cursorAmt) * 0.12;
 
-      // base grid stays exactly where it is — no warping
+      // base grid: lines near the cursor stretch out to meet it, rest stay put
       ctx.globalAlpha = 1;
-      for (const s of segments) ctx.fillRect(s.x, s.y, s.w, s.h);
+      const reaching = cursorAmt > 0.002;
+      if (reaching) {
+        ctx.beginPath();
+        for (const s of segments) {
+          const [ax, ay, bx, by] = segEnds(s);
+          if (nearReach(ax, ay, bx, by)) addReach(ax, ay, bx, by);
+          else ctx.fillRect(s.x, s.y, s.w, s.h);
+        }
+        ctx.strokeStyle = color;
+        ctx.lineWidth = LINE_W;
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.stroke();
+      } else {
+        for (const s of segments) ctx.fillRect(s.x, s.y, s.w, s.h);
+      }
 
       // gather reveal targets from the cursor and the idle blooms
       wobT = now * 0.001;
