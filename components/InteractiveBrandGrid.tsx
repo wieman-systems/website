@@ -74,11 +74,9 @@ const CURSOR_THROB = 0.1; // gentle breathing of the bloom size
 const AMB_COUNT = 3; // idle blooms that drift when there's no cursor
 const AMB_RADIUS = 96; // idle-bloom reach (css px)
 const AMB_AMP = 0.66; // idle-bloom strength (set 0 to disable idle life)
-// Existing lines reach toward the cursor when it gets near (local, not global).
-const REACH_RADIUS = 80; // existing lines within this of the cursor reach for it
-const REACH_MAX = 34; // max px an existing line stretches toward the cursor
-const SUBDIV_STEP = 11; // px between samples when bending a reaching line
-const MAX_SUBDIV = 64; // cap samples per reaching line (perf guard)
+// When the cursor nears an existing gridline, a thin grid-aligned strand draws
+// in to connect them. The lines themselves never move.
+const CONNECT_DIST = 160; // cursor-to-line distance at which a strand forms (px)
 
 export default function InteractiveBrandGrid({
   color = "#fff",
@@ -490,7 +488,7 @@ export default function InteractiveBrandGrid({
       ctx.fillRect(x - LINE_W / 2, y0 - LINE_W / 2, LINE_W, y1 - y0 + LINE_W);
     };
 
-    // ── Existing lines stretch toward the cursor when it gets near ────────
+    // ── Thin strands that connect the cursor to nearby existing gridlines ──
     const segEnds = (s: Seg): [number, number, number, number] => {
       if (s.kind === 0) {
         const cx = s.x + LINE_W / 2;
@@ -504,34 +502,56 @@ export default function InteractiveBrandGrid({
       return [cx, s.y, cx, s.y + s.h];
     };
 
-    // Pull a point toward the cursor — capped so a tip just meets it without
-    // overshooting, and faded out at REACH_RADIUS.
-    const reachPt = (x: number, y: number): [number, number] => {
-      const vx = cur.x - x;
-      const vy = cur.y - y;
-      const d = Math.hypot(vx, vy);
-      if (d >= REACH_RADIUS || d < 0.001) return [x, y];
-      const f = smoothstep(REACH_RADIUS, 0, d);
-      const k = Math.min(d, REACH_MAX * f * cursorAmt) / d;
-      return [x + vx * k, y + vy * k];
+    // Nearest point on an axis-aligned segment to (px,py).
+    const nearestOnSeg = (
+      px: number,
+      py: number,
+      ax: number,
+      ay: number,
+      bx: number,
+      by: number
+    ): [number, number] => {
+      const dx = bx - ax;
+      const dy = by - ay;
+      const len2 = dx * dx + dy * dy || 1;
+      let t = ((px - ax) * dx + (py - ay) * dy) / len2;
+      t = t < 0 ? 0 : t > 1 ? 1 : t;
+      return [ax + dx * t, ay + dy * t];
     };
 
-    const nearReach = (ax: number, ay: number, bx: number, by: number) => {
-      const lo = (v: number, a: number, b: number) =>
-        v < Math.min(a, b) ? Math.min(a, b) : v > Math.max(a, b) ? Math.max(a, b) : v;
-      const dx = cur.x - lo(cur.x, ax, bx);
-      const dy = cur.y - lo(cur.y, ay, by);
-      return dx * dx + dy * dy < REACH_RADIUS * REACH_RADIUS;
+    type Strand = {
+      fromC: number;
+      fromR: number;
+      toC: number;
+      toR: number;
+      p: number;
+      target: number;
     };
+    const strands = new Map<string, Strand>();
 
-    const addReach = (ax: number, ay: number, bx: number, by: number) => {
-      const len = Math.hypot(bx - ax, by - ay);
-      const n = Math.min(MAX_SUBDIV, Math.max(2, Math.ceil(len / SUBDIV_STEP)));
-      for (let i = 0; i <= n; i++) {
-        const u = i / n;
-        const [wx, wy] = reachPt(ax + (bx - ax) * u, ay + (by - ay) * u);
-        if (i === 0) ctx.moveTo(wx, wy);
-        else ctx.lineTo(wx, wy);
+    // Draw an L-shaped, grid-aligned strand from the cursor's lattice node out
+    // to the existing line, revealed up to fraction p by length — straight grid
+    // segments that draw in like the rest, never bent.
+    const drawStrand = (st: Strand) => {
+      const sx = colX(st.fromC);
+      const sy = yRow(st.fromR);
+      const cornerX = colX(st.toC);
+      const endY = yRow(st.toR);
+      const leg1 = Math.abs(cornerX - sx);
+      const leg2 = Math.abs(endY - sy);
+      let budget = st.p * (leg1 + leg2);
+      if (leg1 > 0) {
+        const draw = Math.min(budget, leg1);
+        if (draw > 0) {
+          const x0 = cornerX >= sx ? sx : sx - draw;
+          ctx.fillRect(x0 - LINE_W / 2, sy - LINE_W / 2, draw + LINE_W, LINE_W);
+        }
+        budget -= leg1;
+      }
+      if (budget > 0 && leg2 > 0) {
+        const draw = Math.min(budget, leg2);
+        const y0 = endY >= sy ? sy : sy - draw;
+        ctx.fillRect(cornerX - LINE_W / 2, y0 - LINE_W / 2, LINE_W, draw + LINE_W);
       }
     };
 
@@ -595,24 +615,9 @@ export default function InteractiveBrandGrid({
       }
       cursorAmt += ((pointerOn ? 1 : 0) - cursorAmt) * 0.12;
 
-      // base grid: lines near the cursor stretch out to meet it, rest stay put
+      // base grid stays exactly where it is — lines never move or bend
       ctx.globalAlpha = 1;
-      const reaching = cursorAmt > 0.002;
-      if (reaching) {
-        ctx.beginPath();
-        for (const s of segments) {
-          const [ax, ay, bx, by] = segEnds(s);
-          if (nearReach(ax, ay, bx, by)) addReach(ax, ay, bx, by);
-          else ctx.fillRect(s.x, s.y, s.w, s.h);
-        }
-        ctx.strokeStyle = color;
-        ctx.lineWidth = LINE_W;
-        ctx.lineJoin = "round";
-        ctx.lineCap = "round";
-        ctx.stroke();
-      } else {
-        for (const s of segments) ctx.fillRect(s.x, s.y, s.w, s.h);
-      }
+      for (const s of segments) ctx.fillRect(s.x, s.y, s.w, s.h);
 
       // gather reveal targets from the cursor and the idle blooms
       wobT = now * 0.001;
@@ -660,6 +665,61 @@ export default function InteractiveBrandGrid({
         if (!grow.has(`${c},${r - 1}`)) drawEdgeV(c, r - 1);
       }
 
+      // connect the cursor to the nearest existing gridline with a thin strand
+      for (const st of strands.values()) st.target = 0;
+      if (cursorAmt > 0.002) {
+        let best = CONNECT_DIST * CONNECT_DIST;
+        let qx = 0;
+        let qy = 0;
+        let found = false;
+        for (const s of segments) {
+          const [ax, ay, bx, by] = segEnds(s);
+          if (
+            cur.x < Math.min(ax, bx) - CONNECT_DIST ||
+            cur.x > Math.max(ax, bx) + CONNECT_DIST ||
+            cur.y < Math.min(ay, by) - CONNECT_DIST ||
+            cur.y > Math.max(ay, by) + CONNECT_DIST
+          )
+            continue;
+          const [nx, ny] = nearestOnSeg(cur.x, cur.y, ax, ay, bx, by);
+          const dd = (cur.x - nx) ** 2 + (cur.y - ny) ** 2;
+          if (dd < best) {
+            best = dd;
+            qx = nx;
+            qy = ny;
+            found = true;
+          }
+        }
+        if (found) {
+          const cC = Math.round((cur.x - offsetX) / unitProp);
+          const cR = Math.round((cur.y - unitProp / 2) / unitProp);
+          const toC = Math.round((qx - offsetX) / unitProp);
+          const toR = Math.round((qy - unitProp / 2) / unitProp);
+          if (toC !== cC || toR !== cR) {
+            const tp =
+              cursorAmt *
+              smoothstep(CONNECT_DIST, CONNECT_DIST * 0.3, Math.sqrt(best));
+            const key = `${toC},${toR}`;
+            let st = strands.get(key);
+            if (!st) {
+              st = { fromC: cC, fromR: cR, toC, toR, p: 0, target: 0 };
+              strands.set(key, st);
+            }
+            st.fromC = cC;
+            st.fromR = cR;
+            st.target = tp;
+          }
+        }
+      }
+      for (const [key, st] of strands) {
+        st.p += (st.target - st.p) * (st.target > st.p ? RISE : FALL);
+        if (st.p < 0.004 && st.target <= 0) {
+          strands.delete(key);
+          continue;
+        }
+        drawStrand(st);
+      }
+
       applyClears();
 
       if (
@@ -667,7 +727,8 @@ export default function InteractiveBrandGrid({
         recentlyMoved ||
         ambientActive ||
         cursorAmt > 0.002 ||
-        grow.size > 0
+        grow.size > 0 ||
+        strands.size > 0
       ) {
         raf = requestAnimationFrame(render);
       } else {
