@@ -68,7 +68,8 @@ const REVEAL_CORE = 0.2; // inner fraction at full strength (rest eases out)
 const REVEAL_THRESH = 0.4; // level-set cutoff — at/above this the grid is solid
 const RISE = 0.24; // grow-in speed — reaching out to meet you
 const FALL = 0.06; // suck-back speed — slower, recedes from the outside in
-const WOBBLE = 0.36; // organic distortion of the bloom edge (0 = plain circle)
+const WOBBLE = 0.16; // low-frequency overall shape distortion of the bloom
+const SPIKE = 0.46; // per-node rim roughness — higher = spikier / more fragmented
 const CURSOR_THROB = 0.1; // gentle breathing of the bloom size
 const AMB_COUNT = 3; // idle blooms that drift when there's no cursor
 const AMB_RADIUS = 104; // idle-bloom reach (css px)
@@ -387,29 +388,45 @@ export default function InteractiveBrandGrid({
       if (prev === undefined || t > prev) tgt.set(key, t);
     };
 
-    // Reveal strength at a node: 1 in the core, eased to 0 at an organic,
-    // time-varying radius so the bloom is a living blob, not a clean circle.
+    const hash = (a: number, b: number) => {
+      const n = Math.sin(a * 127.1 + b * 311.7) * 43758.5453;
+      return n - Math.floor(n);
+    };
+    // Per-node value noise that drifts slowly in time, so spikes morph instead
+    // of strobing.
+    const nodeNoise = (a: number, b: number, t: number) => {
+      const ti = Math.floor(t);
+      const f = t - ti;
+      const s = f * f * (3 - 2 * f);
+      const h0 = hash(a + ti * 0.37, b - ti * 0.53);
+      const h1 = hash(a + (ti + 1) * 0.37, b - (ti + 1) * 0.53);
+      return h0 + (h1 - h0) * s;
+    };
+
+    // Reveal at a lattice node. A mild angular wobble sets the overall shape;
+    // strong per-node noise on the rim radius shreds the edge into spikes and
+    // fragments. The inner core radius is fixed, so the centre stays solid.
     const reveal = (
-      mx: number,
-      my: number,
+      c: number,
+      r: number,
       sx: number,
       sy: number,
-      r: number,
+      radius: number,
       seed: number
     ) => {
-      const dx = mx - sx;
-      const dy = my - sy;
+      const dx = colX(c) - sx;
+      const dy = yRow(r) - sy;
       const d = Math.hypot(dx, dy);
-      if (d >= r * 1.4) return 0;
+      if (d >= radius * 1.75) return 0;
       const ang = Math.atan2(dy, dx);
       const wob =
         1 +
         WOBBLE *
-          (0.5 * Math.sin(3 * ang + wobT * 1.3 + seed) +
-            0.3 * Math.sin(5 * ang - wobT * 0.9 + seed * 1.7) +
-            0.2 * Math.sin(2 * ang + wobT * 2.1));
-      const rr = r * wob;
-      return d >= rr ? 0 : smoothstep(rr, rr * REVEAL_CORE, d);
+          (0.6 * Math.sin(3 * ang + wobT * 1.1 + seed) +
+            0.4 * Math.sin(6 * ang - wobT * 0.8 + seed * 1.7));
+      const spike = 1 + SPIKE * (2 * nodeNoise(c + seed, r - seed, wobT * 0.7) - 1);
+      const rr = radius * wob * spike;
+      return d >= rr ? 0 : smoothstep(rr, radius * REVEAL_CORE, d);
     };
 
     const addBloom = (
@@ -419,15 +436,14 @@ export default function InteractiveBrandGrid({
       amp: number,
       seed: number
     ) => {
-      const maxR = r * 1.4;
+      const maxR = r * 1.75;
       const c0 = Math.floor((sx - maxR - offsetX) / unitProp);
       const c1 = Math.ceil((sx + maxR - offsetX) / unitProp);
       const r0 = Math.floor((sy - maxR) / unitProp) - 1;
       const r1 = Math.ceil((sy + maxR) / unitProp) + 1;
       for (let c = c0; c <= c1; c++) {
-        const x = colX(c);
         for (let rr = r0; rr <= r1; rr++) {
-          const t = amp * reveal(x, yRow(rr), sx, sy, r, seed);
+          const t = amp * reveal(c, rr, sx, sy, r, seed);
           if (t > 0.002) bump(`${c},${rr}`, t);
         }
       }
