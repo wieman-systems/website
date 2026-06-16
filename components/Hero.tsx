@@ -85,7 +85,7 @@ export default function Hero({ onBook }: HeroProps) {
         interactive
         drawIn
         clearTargets={[
-          { ref: headingRef, padX: 14, padTop: 10, padBottom: 12 },
+          { ref: headingRef, padX: 6, padTop: 2, padBottom: 4, mp: 6 },
           { ref: leadRef, padX: 14, padTop: 8, padBottom: 10 },
           { ref: heroBtnRef, padX: 10, padTop: 8, padBottom: 8 },
         ]}

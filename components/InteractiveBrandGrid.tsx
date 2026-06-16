@@ -14,6 +14,8 @@ interface ClearTarget {
   padX?: number;
   padTop?: number;
   padBottom?: number;
+  /** Guaranteed-clear margin around the box (px). Lower = grid sits closer. */
+  mp?: number;
 }
 
 interface InteractiveBrandGridProps {
@@ -317,9 +319,10 @@ export default function InteractiveBrandGrid({
           const px = isCT ? (tg as ClearTarget).padX ?? 0 : 0;
           const pt = isCT ? (tg as ClearTarget).padTop ?? 0 : 0;
           const pb = isCT ? (tg as ClearTarget).padBottom ?? 0 : 0;
+          const mp = isCT ? (tg as ClearTarget).mp ?? 17 : 17;
           const x0 = r.left - cb.left;
           const y0 = r.top - cb.top;
-          raggedClear(x0 - px, y0 - pt, x0 + r.width + px, y0 + r.height + pb, 17);
+          raggedClear(x0 - px, y0 - pt, x0 + r.width + px, y0 + r.height + pb, mp);
         }
       }
     };
