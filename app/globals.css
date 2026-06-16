@@ -256,18 +256,27 @@ html.ws-cursor-on .field input, html.ws-cursor-on .field textarea { cursor: text
   animation: ws-marquee 38s linear infinite;
   will-change: transform;
 }
-.marquee:hover .marquee__track { animation-play-state: paused; }
+/* Hover slow-down is driven via the Web Animations playbackRate in JS. */
 .marquee__item {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(8px, 0.9vw, 12px);
   padding: 0 clamp(18px, 2.6vw, 42px);
   font-family: var(--font-display), sans-serif;
   font-weight: 500;
-  font-size: clamp(17px, 1.8vw, 24px);
+  font-size: clamp(16px, 1.7vw, 22px);
   letter-spacing: -0.01em;
   color: var(--color-gray-500);
   white-space: nowrap;
   transition: color 160ms linear;
 }
-.marquee:hover .marquee__item:hover { color: #000; }
+.marquee__item:hover { color: #000; }
+.marquee__logo {
+  width: clamp(18px, 1.8vw, 24px);
+  height: clamp(18px, 1.8vw, 24px);
+  flex: none;
+  display: block;
+}
 @keyframes ws-marquee {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
