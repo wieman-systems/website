@@ -201,6 +201,22 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
             >
               <ScrambleText text={EMAIL} />
             </a>
+            <div
+              style={{
+                display: "flex",
+                gap: 16,
+                fontFamily: "var(--font-mono), monospace",
+                fontSize: 11,
+                letterSpacing: "0.04em",
+              }}
+            >
+              <a href="/privacy" style={{ color: "var(--color-gray-400)", textDecoration: "none" }}>
+                Privacy
+              </a>
+              <a href="/terms" style={{ color: "var(--color-gray-400)", textDecoration: "none" }}>
+                Terms
+              </a>
+            </div>
             <span
               style={{
                 fontFamily: "var(--font-mono), monospace",
@@ -209,7 +225,7 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
                 letterSpacing: "1.4px",
               }}
             >
-              <ScrambleText text="© 2026 Wieman Systems" />
+              <ScrambleText text="© 2026 Wieman Systems LLC" />
             </span>
           </div>
         </div>

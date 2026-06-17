@@ -26,11 +26,11 @@ const faqs = [
   },
   {
     q: "How long until the first system is live?",
-    a: "Most first builds go live in about 2–4 weeks, depending on scope. We start with a short mapping phase so you see the plan before anything is built.",
+    a: "Most first builds go live in roughly 2–4 weeks, but that's a typical range, not a guarantee — actual timing depends on scope, access, and how fast we get what we need from you. We start with a short mapping phase so you see the plan, and the agreed timeline, before anything is built.",
   },
   {
     q: "What does it cost?",
-    a: "Every engagement is scoped and priced up front — you approve a fixed scope before any work begins, so there are no surprises.",
+    a: "Every engagement is scoped and priced up front: you approve a written proposal with a fixed price for a defined scope before any work begins. If the scope changes, we agree the change — and any cost — in writing first, so you never get a surprise invoice.",
   },
 ];
 

@@ -99,6 +99,22 @@ export default function IntegrationsStrip() {
               ))}
             </div>
           </div>
+
+          <p
+            style={{
+              fontFamily: "var(--font-mono), monospace",
+              fontSize: 10.5,
+              lineHeight: 1.5,
+              color: "var(--color-gray-500)",
+              textAlign: "center",
+              maxWidth: 620,
+              margin: "26px auto 0",
+              padding: "0 var(--gutter)",
+            }}
+          >
+            Product names and logos are trademarks of their respective owners.
+            Shown to indicate compatibility — not partnership or endorsement.
+          </p>
         </Reveal>
       </div>
     </section>
