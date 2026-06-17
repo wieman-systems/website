@@ -50,8 +50,8 @@ const PRINCIPLES = [
     d: "I build inside your own accounts and cloud, with least-privilege access. Nothing gets resold, and nothing trains a model.",
   },
   {
-    t: "You own what I build",
-    d: "The system is yours, end to end — no lock-in, and no black box you can't see into.",
+    t: "Built around your workflow",
+    d: "I shape the system to how your team already works — not a template you have to bend to.",
   },
   {
     t: "Fixed scope, up front",
@@ -140,7 +140,7 @@ export default function About() {
                   I&apos;m Caleb Wieman — the person behind Wieman Systems. I&apos;m a college student and a
                   builder, and I spend my time at the edge of what today&apos;s tools can do, then turn it
                   into systems that quietly handle a business&apos;s busywork. No agency, no handoff to a
-                  junior team — you work directly with the person building your system.
+                  junior team — you work directly with the person building it.
                 </p>
               </div>
               <div className="about-visual">
