@@ -8,7 +8,7 @@ import ClosingBlock from "@/components/ClosingBlock";
 import BlueprintGrid from "@/components/BlueprintGrid";
 import Reveal from "@/components/Reveal";
 import ScrambleText from "@/components/ScrambleText";
-import HarmonographPlate from "@/components/faq/HarmonographPlate";
+import LogoPlate from "@/components/LogoPlate";
 
 const TOP_MASK =
   "linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent)";
@@ -144,7 +144,7 @@ export default function About() {
                 </p>
               </div>
               <div className="about-visual">
-                <HarmonographPlate />
+                <LogoPlate />
               </div>
             </div>
           </div>
