@@ -63,10 +63,16 @@ export default function StopDoing() {
   return (
     <section
       ref={sectionRef}
-      style={{ position: "relative", borderTop: "1px solid #000", overflow: "hidden" }}
+      style={{
+        position: "relative",
+        borderTop: "1px solid #000",
+        overflow: "hidden",
+        background: "#000",
+        color: "#fff",
+      }}
     >
       <BlueprintGrid
-        color="#000"
+        color="#fff"
         opacity={0.05}
         unit={52}
         fade={false}
@@ -85,23 +91,24 @@ export default function StopDoing() {
           label="Stop doing by hand"
           title="If your team still does this manually, it is a system we can build."
           maxTitle={880}
+          dark
         />
         <div
           className="stop-timeline"
           style={{ position: "relative", paddingLeft: "clamp(18px, 3vw, 30px)" }}
         >
-          <div className="stop-rail">
-            <div className="stop-rail__fill" ref={railFillRef} />
+          <div className="stop-rail" style={{ background: "rgba(255,255,255,0.16)" }}>
+            <div className="stop-rail__fill" ref={railFillRef} style={{ background: "#fff" }} />
           </div>
           <div className="stop-grid">
             {tasks.map((task, i) => (
-              <div className="stop-row" key={i}>
+              <div className="stop-row" key={i} style={{ borderTopColor: "rgba(255,255,255,0.16)" }}>
                 <span
                   style={{
                     fontFamily: "var(--font-mono), monospace",
                     fontSize: 12,
                     letterSpacing: "0.1em",
-                    color: "var(--color-gray-500)",
+                    color: "var(--color-gray-400)",
                     minWidth: 26,
                   }}
                 >
@@ -113,7 +120,7 @@ export default function StopDoing() {
                     fontWeight: 500,
                     fontSize: "clamp(17px, 1.5vw, 20px)",
                     letterSpacing: "-0.01em",
-                    color: "#000",
+                    color: "#fff",
                     flex: 1,
                   }}
                 >
@@ -126,7 +133,7 @@ export default function StopDoing() {
                     fontFamily: "var(--font-mono), monospace",
                     fontSize: 10,
                     letterSpacing: "0.14em",
-                    color: "var(--color-gray-500)",
+                    color: "var(--color-gray-400)",
                     whiteSpace: "nowrap",
                   }}
                 />
