@@ -295,3 +295,19 @@ html.ws-cursor-on .field input, html.ws-cursor-on .field textarea { cursor: text
   }
   .marquee__item[data-dup] { display: none; }
 }
+
+/* ── FAQ: questions + interactive caliper column ───────────────── */
+.faq-grid { display: grid; grid-template-columns: 1fr; }
+.faq-list { min-width: 0; }
+.faq-aside { display: none; }
+@media (min-width: 980px) {
+  .faq-grid {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    column-gap: clamp(28px, 4vw, 64px);
+    align-items: stretch; /* the caliper column stretches to the list height */
+  }
+  .faq-aside {
+    display: block;
+    position: relative; /* containing block for the absolutely-filled canvas */
+  }
+}

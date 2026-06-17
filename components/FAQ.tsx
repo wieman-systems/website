@@ -1,6 +1,10 @@
+"use client";
+
+import { useRef, useState } from "react";
 import SectionHead from "./SectionHead";
 import Reveal from "./Reveal";
 import BlueprintGrid from "./BlueprintGrid";
+import CaliperGauge from "./faq/CaliperGauge";
 
 const SECTION_MASK =
   "linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent)";
@@ -31,6 +35,9 @@ const faqs = [
 ];
 
 export default function FAQ() {
+  const [active, setActive] = useState<number | null>(null);
+  const itemRefs = useRef<(HTMLElement | null)[]>([]);
+
   return (
     <section
       style={{ position: "relative", borderTop: "1px solid #000", overflow: "hidden" }}
@@ -51,42 +58,54 @@ export default function FAQ() {
         }}
       >
         <SectionHead index="04" label="FAQ" title="Questions, answered." />
-        <div style={{ maxWidth: 820 }}>
-          {faqs.map((f, i) => (
-            <Reveal key={f.q} delay={i * 0.05}>
-              <div
-                style={{
-                  borderTop: "1px solid rgba(0,0,0,0.12)",
-                  padding: "clamp(22px, 3vh, 30px) 0",
-                }}
-              >
-                <h3
+
+        <div className="faq-grid">
+          <div className="faq-list">
+            {faqs.map((f, i) => (
+              <Reveal key={f.q} delay={i * 0.05}>
+                <div
+                  ref={(el) => { itemRefs.current[i] = el; }}
+                  onMouseEnter={() => setActive(i)}
+                  onMouseLeave={() => setActive((a) => (a === i ? null : a))}
                   style={{
-                    fontFamily: "var(--font-display), sans-serif",
-                    fontWeight: 600,
-                    fontSize: "clamp(18px, 1.9vw, 23px)",
-                    letterSpacing: "-0.02em",
-                    marginBottom: 12,
-                    color: "#000",
+                    borderTop: "1px solid rgba(0,0,0,0.12)",
+                    padding: "clamp(22px, 3vh, 30px) 0",
                   }}
                 >
-                  {f.q}
-                </h3>
-                <p
-                  style={{
-                    fontFamily: "var(--font-display), sans-serif",
-                    fontSize: 16,
-                    lineHeight: 1.62,
-                    color: "var(--color-gray-700)",
-                    maxWidth: 660,
-                    margin: 0,
-                  }}
-                >
-                  {f.a}
-                </p>
-              </div>
-            </Reveal>
-          ))}
+                  <h3
+                    style={{
+                      fontFamily: "var(--font-display), sans-serif",
+                      fontWeight: 600,
+                      fontSize: "clamp(18px, 1.9vw, 23px)",
+                      letterSpacing: "-0.02em",
+                      marginBottom: 12,
+                      color: "#000",
+                    }}
+                  >
+                    {f.q}
+                  </h3>
+                  <p
+                    style={{
+                      fontFamily: "var(--font-display), sans-serif",
+                      fontSize: 16,
+                      lineHeight: 1.62,
+                      color: "var(--color-gray-700)",
+                      maxWidth: 620,
+                      margin: 0,
+                    }}
+                  >
+                    {f.a}
+                  </p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+
+          {/* Interactive caliper — measures whichever question you hover.
+              Desktop-only; collapses on mobile via CSS. */}
+          <div className="faq-aside" aria-hidden>
+            <CaliperGauge activeIndex={active} itemsRef={itemRefs} count={faqs.length} />
+          </div>
         </div>
       </div>
     </section>
