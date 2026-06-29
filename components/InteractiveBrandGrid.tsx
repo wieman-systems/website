@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useThemeInk } from "./ThemeProvider";
 
 interface ClearRect {
   x0: number;
@@ -19,7 +20,8 @@ interface ClearTarget {
 }
 
 interface InteractiveBrandGridProps {
-  color?: string;
+  /** Which surface this grid sits on — picks the ink that flips with the theme. */
+  tone?: "primary" | "inverse";
   height?: string;
   opacity?: number;
   anchor?: "bottom" | "top";
@@ -82,7 +84,7 @@ const EDGE_SHIMMER = 24; // px the skyline top edge grows/recedes as it shimmers
 const CONNECT_DIST = 160; // cursor-to-line distance at which a strand forms (px)
 
 export default function InteractiveBrandGrid({
-  color = "#fff",
+  tone = "primary",
   height = "70%",
   opacity = 0.5,
   anchor = "bottom",
@@ -99,6 +101,7 @@ export default function InteractiveBrandGrid({
   drawIn = true,
 }: InteractiveBrandGridProps) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const drawColor = `rgb(${useThemeInk(tone)})`;
 
   useEffect(() => {
     const canvas = ref.current;
@@ -584,7 +587,7 @@ export default function InteractiveBrandGrid({
       lastFrame = now;
 
       ctx.clearRect(0, 0, W, H);
-      ctx.fillStyle = color;
+      ctx.fillStyle = drawColor;
 
       if (armed) {
         // Off-screen, nothing has drawn in yet.
@@ -812,7 +815,7 @@ export default function InteractiveBrandGrid({
       document.removeEventListener("visibilitychange", onVis);
     };
   }, [
-    color,
+    drawColor,
     unitProp,
     offsetX,
     fragRate,

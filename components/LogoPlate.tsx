@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useThemeInk } from "./ThemeProvider";
 
 /**
  * THE MARK PLATE — a precision drafting instrument that plots the Wieman Systems
@@ -52,6 +53,7 @@ const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 export default function LogoPlate() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const ink = useThemeInk("primary");
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -128,12 +130,12 @@ export default function LogoPlate() {
       ctx.closePath();
     };
     const strokeFull = (forms: number[][][], alpha: number) => {
-      ctx.strokeStyle = `rgba(0,0,0,${alpha})`;
+      ctx.strokeStyle = `rgba(${ink},${alpha})`;
       ctx.lineWidth = OUTLINE_W;
       for (const f of forms) { pathLoop(f); ctx.stroke(); }
     };
     const fillFull = (forms: number[][][], alpha: number) => {
-      ctx.fillStyle = `rgba(0,0,0,${alpha})`;
+      ctx.fillStyle = `rgba(${ink},${alpha})`;
       for (const f of forms) { pathLoop(f); ctx.fill(); }
     };
 
@@ -141,11 +143,11 @@ export default function LogoPlate() {
     const drawChrome = (phaseLabel: string) => {
       // frame
       ctx.lineWidth = 1;
-      ctx.strokeStyle = "rgba(0,0,0,0.5)";
+      ctx.strokeStyle = `rgba(${ink},0.5)`;
       ctx.strokeRect(px + 0.5, py + 0.5, Math.round(pw), Math.round(ph));
       // corner registration ticks
       const tk = 9;
-      ctx.strokeStyle = "rgba(0,0,0,0.9)";
+      ctx.strokeStyle = `rgba(${ink},0.9)`;
       ctx.lineWidth = 1.2;
       const corner = (x: number, y: number, sx: number, sy: number) => {
         ctx.beginPath();
@@ -158,11 +160,11 @@ export default function LogoPlate() {
       // caption
       const by = py + ph - 11;
       ctx.textBaseline = "alphabetic";
-      ctx.fillStyle = "rgba(0,0,0,0.6)";
+      ctx.fillStyle = `rgba(${ink},0.6)`;
       ctx.font = "600 10px ui-monospace, SFMono-Regular, Menlo, monospace";
       ctx.textAlign = "left";
       ctx.fillText("WS-MARK", px + 8, by);
-      ctx.fillStyle = "rgba(0,0,0,0.42)";
+      ctx.fillStyle = `rgba(${ink},0.42)`;
       ctx.font = "400 10px ui-monospace, SFMono-Regular, Menlo, monospace";
       ctx.textAlign = "right";
       ctx.fillText(phaseLabel, px + pw - 8, by);
@@ -172,7 +174,7 @@ export default function LogoPlate() {
     // faint pivot crosshair at the mark's centre (behind the figure)
     const drawPivot = () => {
       const cx = lx + lw / 2, cy = ly + lh / 2;
-      ctx.strokeStyle = "rgba(0,0,0,0.13)";
+      ctx.strokeStyle = `rgba(${ink},0.13)`;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(cx - 7, cy); ctx.lineTo(cx + 7, cy);
@@ -200,7 +202,7 @@ export default function LogoPlate() {
     const drawReticle = () => {
       if (!ptr.inside) return;
       const x = clamp(ptr.x, px, px + pw), y = clamp(ptr.y, py, py + ph);
-      ctx.strokeStyle = "rgba(0,0,0,0.28)";
+      ctx.strokeStyle = `rgba(${ink},0.28)`;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(x - 9, y); ctx.lineTo(x - 3, y); ctx.moveTo(x + 3, y); ctx.lineTo(x + 9, y);
@@ -239,7 +241,7 @@ export default function LogoPlate() {
         strokeFull(forms, 0.07);
         const total = forms.reduce((s, f) => s + perim(f), 0);
         let rem = p * total, head: [number, number] | null = null;
-        ctx.strokeStyle = "rgba(0,0,0,0.9)";
+        ctx.strokeStyle = `rgba(${ink},0.9)`;
         ctx.lineWidth = OUTLINE_W;
         for (const f of forms) {
           const per = perim(f);
@@ -250,9 +252,9 @@ export default function LogoPlate() {
           if (rem <= 0) break;
         }
         if (head) {
-          ctx.fillStyle = "#000";
+          ctx.fillStyle = `rgb(${ink})`;
           ctx.beginPath(); ctx.arc(head[0], head[1], 2.4, 0, Math.PI * 2); ctx.fill();
-          ctx.strokeStyle = "rgba(0,0,0,0.45)"; ctx.lineWidth = 1;
+          ctx.strokeStyle = `rgba(${ink},0.45)`; ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.moveTo(head[0] - 6, head[1]); ctx.lineTo(head[0] + 6, head[1]);
           ctx.moveTo(head[0], head[1] - 6); ctx.lineTo(head[0], head[1] + 6);
@@ -270,7 +272,7 @@ export default function LogoPlate() {
         ctx.restore();
         strokeFull(forms, 0.9);
         // ink-front hairline
-        ctx.strokeStyle = "rgba(0,0,0,0.5)";
+        ctx.strokeStyle = `rgba(${ink},0.5)`;
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(lx, Math.round(wipe) + 0.5); ctx.lineTo(lx + lw, Math.round(wipe) + 0.5);
@@ -355,7 +357,7 @@ export default function LogoPlate() {
       if (loop) window.removeEventListener("mousemove", onMove);
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, []);
+  }, [ink]);
 
   return (
     <div ref={wrapRef} style={{ position: "absolute", inset: 0 }}>

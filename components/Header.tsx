@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import MagneticButton from "./MagneticButton";
+import ThemeToggle from "./ThemeToggle";
 
 interface HeaderProps {
   onBook: () => void;
@@ -23,12 +24,13 @@ export default function Header({ onBook }: HeaderProps) {
 
   return (
     <header
+      data-theme-anim
       style={{
         position: "sticky",
         top: 0,
         zIndex: 100,
-        background: "#fff",
-        borderBottom: `1px solid ${scrolled ? "#000" : "#e5e5e5"}`,
+        background: "var(--bg)",
+        borderBottom: `1px solid ${scrolled ? "var(--fg)" : "var(--border-soft)"}`,
         transition: "border-color 140ms linear",
       }}
     >
@@ -63,6 +65,7 @@ export default function Header({ onBook }: HeaderProps) {
             alt=""
             width={34}
             height={34}
+            data-logo
             style={{ height: 34, width: "auto" }}
           />
           <span style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
@@ -72,7 +75,7 @@ export default function Header({ onBook }: HeaderProps) {
                 fontWeight: 700,
                 fontSize: 15.6,
                 letterSpacing: "0.13em",
-                color: "#000",
+                color: "var(--fg)",
               }}
             >
               WIEMAN
@@ -83,7 +86,7 @@ export default function Header({ onBook }: HeaderProps) {
                 fontWeight: 500,
                 fontSize: 9.2,
                 letterSpacing: "0.44em",
-                color: "#000",
+                color: "var(--fg)",
                 opacity: 0.92,
                 marginTop: 4.4,
               }}
@@ -102,6 +105,7 @@ export default function Header({ onBook }: HeaderProps) {
           >
             About
           </Link>
+          <ThemeToggle />
           <MagneticButton
             variant="solid-dark"
             onClick={onBook}

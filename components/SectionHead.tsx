@@ -17,8 +17,12 @@ export default function SectionHead({
   align = "left",
   maxTitle = 760,
 }: SectionHeadProps) {
-  const labelColor = dark ? "var(--color-gray-400)" : "var(--color-gray-600)";
-  const ruleColor = dark ? "#fff" : "#000";
+  // `dark` = this head sits on an inverted accent section → use the *-inverse
+  // tokens so it flips in lockstep with the theme.
+  const labelColor = dark
+    ? "rgba(var(--ink-inverse-rgb), 0.62)"
+    : "var(--text-eyebrow)";
+  const ruleColor = dark ? "var(--fg-inverse)" : "var(--fg)";
 
   return (
     <div

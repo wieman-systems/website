@@ -40,10 +40,9 @@ export default function FAQ() {
 
   return (
     <section
-      style={{ position: "relative", borderTop: "1px solid #000", overflow: "hidden" }}
+      style={{ position: "relative", borderTop: "1px solid var(--fg)", overflow: "hidden" }}
     >
       <BlueprintGrid
-        color="#000"
         opacity={0.05}
         unit={52}
         fade={false}
@@ -68,7 +67,7 @@ export default function FAQ() {
                   onMouseEnter={() => setActive(i)}
                   onMouseLeave={() => setActive((a) => (a === i ? null : a))}
                   style={{
-                    borderTop: "1px solid rgba(0,0,0,0.12)",
+                    borderTop: "1px solid rgba(var(--ink-rgb), 0.12)",
                     padding: "clamp(22px, 3vh, 30px) 0",
                   }}
                 >
@@ -79,7 +78,7 @@ export default function FAQ() {
                       fontSize: "clamp(18px, 1.9vw, 23px)",
                       letterSpacing: "-0.02em",
                       marginBottom: 12,
-                      color: "#000",
+                      color: "var(--fg)",
                     }}
                   >
                     {f.q}
@@ -89,7 +88,7 @@ export default function FAQ() {
                       fontFamily: "var(--font-display), sans-serif",
                       fontSize: 16,
                       lineHeight: 1.62,
-                      color: "var(--color-gray-700)",
+                      color: "rgba(var(--ink-rgb), 0.72)",
                       maxWidth: 620,
                       margin: 0,
                     }}

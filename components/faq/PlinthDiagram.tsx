@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useThemeInk } from "../ThemeProvider";
 
 /**
  * THE PLINTH — an exploded-axonometric "system" that assembles under the cursor.
@@ -48,6 +49,7 @@ export default function PlinthDiagram({ activeIndex = null, labels = PLATES }: P
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const activeRef = useRef<number | null>(activeIndex);
   activeRef.current = activeIndex;
+  const ink = useThemeInk("primary");
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -179,11 +181,11 @@ export default function PlinthDiagram({ activeIndex = null, labels = PLATES }: P
         ctx.moveTo(tf[0][0], tf[0][1]);
         for (let k = 1; k < 4; k++) ctx.lineTo(tf[k][0], tf[k][1]);
         ctx.closePath();
-        ctx.fillStyle = `rgba(0,0,0,${faceA})`;
+        ctx.fillStyle = `rgba(${ink},${faceA})`;
         ctx.fill();
 
         // edges
-        ctx.strokeStyle = `rgba(0,0,0,${edgeA})`;
+        ctx.strokeStyle = `rgba(${ink},${edgeA})`;
         for (let e = 0; e < EDGES.length; e++) {
           const [ai, bi] = EDGES[e];
           let p = 1;
@@ -203,13 +205,13 @@ export default function PlinthDiagram({ activeIndex = null, labels = PLATES }: P
           const labelY = lpy + oy + 3;
           const labA = isActive ? 1 : dim ? 0.22 : 0.5;
           // leader
-          ctx.strokeStyle = `rgba(0,0,0,${labA * 0.55})`;
+          ctx.strokeStyle = `rgba(${ink},${labA * 0.55})`;
           ctx.beginPath();
           ctx.moveTo(labelX + 54, labelY - 3);
           ctx.lineTo(lpx + ox, lpy + oy);
           ctx.stroke();
           // text
-          ctx.fillStyle = `rgba(0,0,0,${labA})`;
+          ctx.fillStyle = `rgba(${ink},${labA})`;
           ctx.font = `600 10px ui-monospace, SFMono-Regular, Menlo, monospace`;
           ctx.textBaseline = "alphabetic";
           const num = String(i + 1).padStart(2, "0");
@@ -274,7 +276,7 @@ export default function PlinthDiagram({ activeIndex = null, labels = PLATES }: P
       if (canInteract) window.removeEventListener("mousemove", onMove);
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, [labels]);
+  }, [labels, ink]);
 
   return (
     <div ref={wrapRef} style={{ position: "absolute", inset: 0 }}>

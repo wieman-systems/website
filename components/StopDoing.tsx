@@ -65,14 +65,14 @@ export default function StopDoing() {
       ref={sectionRef}
       style={{
         position: "relative",
-        borderTop: "1px solid #000",
+        borderTop: "1px solid var(--bg-inverse)",
         overflow: "hidden",
-        background: "#000",
-        color: "#fff",
+        background: "var(--bg-inverse)",
+        color: "var(--fg-inverse)",
       }}
     >
       <BlueprintGrid
-        color="#fff"
+        tone="inverse"
         opacity={0.05}
         unit={52}
         fade={false}
@@ -97,18 +97,18 @@ export default function StopDoing() {
           className="stop-timeline"
           style={{ position: "relative", paddingLeft: "clamp(18px, 3vw, 30px)" }}
         >
-          <div className="stop-rail" style={{ background: "rgba(255,255,255,0.16)" }}>
-            <div className="stop-rail__fill" ref={railFillRef} style={{ background: "#fff" }} />
+          <div className="stop-rail" style={{ background: "rgba(var(--ink-inverse-rgb), 0.16)" }}>
+            <div className="stop-rail__fill" ref={railFillRef} style={{ background: "var(--fg-inverse)" }} />
           </div>
           <div className="stop-grid">
             {tasks.map((task, i) => (
-              <div className="stop-row" key={i} style={{ borderTopColor: "rgba(255,255,255,0.16)" }}>
+              <div className="stop-row" key={i} style={{ borderTopColor: "rgba(var(--ink-inverse-rgb), 0.16)" }}>
                 <span
                   style={{
                     fontFamily: "var(--font-mono), monospace",
                     fontSize: 12,
                     letterSpacing: "0.1em",
-                    color: "var(--color-gray-400)",
+                    color: "rgba(var(--ink-inverse-rgb), 0.6)",
                     minWidth: 26,
                   }}
                 >
@@ -120,7 +120,7 @@ export default function StopDoing() {
                     fontWeight: 500,
                     fontSize: "clamp(17px, 1.5vw, 20px)",
                     letterSpacing: "-0.01em",
-                    color: "#fff",
+                    color: "var(--fg-inverse)",
                     flex: 1,
                   }}
                 >
@@ -133,7 +133,7 @@ export default function StopDoing() {
                     fontFamily: "var(--font-mono), monospace",
                     fontSize: 10,
                     letterSpacing: "0.14em",
-                    color: "var(--color-gray-400)",
+                    color: "rgba(var(--ink-inverse-rgb), 0.6)",
                     whiteSpace: "nowrap",
                   }}
                 />

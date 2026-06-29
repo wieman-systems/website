@@ -58,7 +58,7 @@ export default function IntegrationsStrip() {
 
   return (
     <section
-      style={{ position: "relative", background: "#fff", borderTop: "1px solid #000" }}
+      style={{ position: "relative", background: "var(--bg)", borderTop: "1px solid var(--fg)" }}
     >
       <div style={{ padding: "clamp(44px, 7vh, 72px) 0" }}>
         <Reveal>
@@ -66,7 +66,7 @@ export default function IntegrationsStrip() {
             className="eyebrow"
             style={{
               fontFamily: "var(--font-mono), monospace",
-              color: "var(--color-gray-600)",
+              color: "var(--text-eyebrow)",
               marginBottom: 28,
               padding: "0 var(--gutter)",
             }}
@@ -75,7 +75,7 @@ export default function IntegrationsStrip() {
               style={{
                 width: 22,
                 height: 1,
-                background: "#000",
+                background: "var(--fg)",
                 opacity: 0.35,
                 display: "inline-block",
               }}

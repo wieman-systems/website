@@ -1,5 +1,6 @@
 /* ── Design tokens ─────────────────────────────────────────── */
 :root {
+  /* Raw palette — fixed reference values, never theme-dependent. */
   --color-black: #000000;
   --color-white: #ffffff;
   --color-gray-100: #f5f5f5;
@@ -13,24 +14,100 @@
   --color-gray-900: #171717;
   --wrap: 1200px;
   --gutter: clamp(20px, 5vw, 72px);
+
+  /* ── Semantic, theme-aware tokens (LIGHT defaults) ──────────
+     Two pairs that swap when the theme flips:
+       --bg / --fg            → primary surfaces (most of the page)
+       --bg-inverse / --fg-inverse → the deliberately-inverted accent
+                                     sections (closing CTA, "stop doing",
+                                     about CTA). Flipping the theme literally
+                                     swaps each pair's value, so the whole
+                                     page inverts while contrast is preserved. */
+  --bg: #ffffff;            /* primary page / section background        */
+  --fg: #000000;            /* primary ink: text, hard 1px borders, fills */
+  --surface: #ffffff;       /* raised panel (modal) background          */
+  --surface-2: var(--color-gray-100); /* subtly sunken section bg (#f5f5f5) */
+  --bg-inverse: #000000;    /* accent/inverted section background       */
+  --fg-inverse: #ffffff;    /* ink on accent/inverted sections          */
+
+  --border-strong: var(--fg);          /* the hard black section dividers */
+  --border-soft: var(--color-gray-200);/* #e5e5e5 hairlines               */
+  --border-mid: var(--color-gray-300); /* #d4d4d4 inputs / step dividers  */
+  --text-muted: var(--color-gray-500); /* secondary copy                  */
+  --text-eyebrow: var(--color-gray-600);/* eyebrow labels                 */
+
+  /* Canvas ink as bare RGB triples for rgba(var(--ink-rgb), a). */
+  --ink-rgb: 0, 0, 0;              /* ink on primary surfaces  */
+  --ink-inverse-rgb: 255, 255, 255;/* ink on inverted surfaces */
+
+  --scrim: rgba(0, 0, 0, 0.55);    /* modal backdrop */
+  --danger: #b00020;               /* form error (fixed both themes) */
+
+  /* Monochrome brand PNGs (logo marks) are recolored by CSS filter so the
+     same asset works on both themes. none in light, invert in dark. */
+  --img-invert: none;
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0b0b0c;
+  --fg: #f5f5f5;
+  --surface: #161618;
+  --surface-2: #121214;
+  --bg-inverse: #f5f5f5;
+  --fg-inverse: #0b0b0c;
+
+  --border-strong: var(--fg);
+  --border-soft: #2a2a2c;
+  --border-mid: #3a3a3d;
+  --text-muted: #9a9a9c;
+  --text-eyebrow: #b5b5b8;
+
+  --ink-rgb: 245, 245, 245;
+  --ink-inverse-rgb: 11, 11, 12;
+
+  --scrim: rgba(0, 0, 0, 0.74);
+
+  --img-invert: invert(1);
+
+  color-scheme: dark;
 }
 
 /* ── Reset ─────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 body {
-  background: #fff;
-  color: #000;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-display), sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   overflow-x: hidden;
 }
-::selection { background: #000; color: #fff; }
+::selection { background: var(--fg); color: var(--bg); }
 img, svg, canvas { display: block; }
 button { cursor: pointer; }
 a { color: inherit; text-decoration: none; }
 button, a { -webkit-tap-highlight-color: transparent; }
+
+/* Brand logo marks (monochrome PNGs) recolor with the theme via filter.
+   Tag them with [data-logo] — photos are never tagged, so they stay true. */
+[data-logo] { filter: var(--img-invert); }
+
+/* Theme cross-fade. Gated on `html.theme-ready` (added by the provider after
+   first paint) so the initial no-flash theme set never animates, and on
+   no-preference so reduced-motion users get an instant, honest flip. */
+@media (prefers-reduced-motion: no-preference) {
+  html.theme-ready,
+  html.theme-ready body,
+  html.theme-ready [data-theme-anim] {
+    transition: background-color 0.45s cubic-bezier(0.65, 0.05, 0.36, 1),
+                color 0.45s cubic-bezier(0.65, 0.05, 0.36, 1),
+                border-color 0.45s cubic-bezier(0.65, 0.05, 0.36, 1);
+  }
+}
 
 /* ── Layout util ───────────────────────────────────────────── */
 .ws-wrap {
@@ -52,7 +129,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
   font-size: 11px;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: var(--color-gray-600);
+  color: var(--text-eyebrow);
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -62,19 +139,19 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .wd-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
 .wd-item { padding: 8px clamp(20px, 3vw, 40px) 8px 0; position: relative; }
 .wd-item + .wd-item {
-  border-left: 1px solid var(--color-gray-200);
+  border-left: 1px solid var(--border-soft);
   padding-left: clamp(24px, 3vw, 44px);
 }
 
 .proc-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
 .proc-step { padding: 0 clamp(22px, 3vw, 44px); position: relative; }
 .proc-step:first-child { padding-left: 0; }
-.proc-step + .proc-step { border-left: 1px solid var(--color-gray-300); }
+.proc-step + .proc-step { border-left: 1px solid var(--border-mid); }
 
 .stop-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: clamp(40px, 6vw, 96px); }
 .stop-row {
   display: flex; align-items: baseline; gap: 16px;
-  padding: 22px 0; border-top: 1px solid var(--color-gray-200);
+  padding: 22px 0; border-top: 1px solid var(--border-soft);
 }
 
 /* ── Hero type ─────────────────────────────────────────────── */
@@ -104,14 +181,14 @@ button, a { -webkit-tap-highlight-color: transparent; }
 /* ── Modal ─────────────────────────────────────────────────── */
 .modal-backdrop {
   position: fixed; inset: 0; z-index: 1000;
-  background: rgba(0,0,0,0.55);
+  background: var(--scrim);
   display: flex; align-items: center; justify-content: center;
   padding: clamp(16px, 5vw, 24px);
   overflow-y: auto; -webkit-overflow-scrolling: touch;
   animation: fadein 140ms linear;
 }
 .modal-panel {
-  background: #fff; border: 1px solid #000; box-shadow: 8px 8px 0 #000;
+  background: var(--surface); border: 1px solid var(--fg); box-shadow: 8px 8px 0 var(--fg);
   width: 100%; max-width: 480px; position: relative; margin: auto;
   animation: rise 160ms linear;
 }
@@ -120,14 +197,14 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 .field label {
   display: block; font-size: 10px; letter-spacing: 0.18em;
-  text-transform: uppercase; color: var(--color-gray-500); margin-bottom: 8px;
+  text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;
 }
 .field input, .field textarea {
-  width: 100%; border: none; border-bottom: 1px solid var(--color-gray-300);
-  background: transparent; font-size: 16px; color: #000;
+  width: 100%; border: none; border-bottom: 1px solid var(--border-mid);
+  background: transparent; font-size: 16px; color: var(--fg);
   padding: 6px 0 10px; outline: none; transition: border-color 100ms linear;
 }
-.field input:focus, .field textarea:focus { border-color: #000; }
+.field input:focus, .field textarea:focus { border-color: var(--fg); }
 .field textarea { resize: none; }
 
 /* ── Responsive ────────────────────────────────────────────── */
@@ -211,35 +288,38 @@ html.ws-cursor-on .field input, html.ws-cursor-on .field textarea { cursor: text
   font-family: var(--font-display), sans-serif; font-weight: 600;
   text-transform: uppercase; letter-spacing: 0.16em; font-size: 13px; line-height: 1;
   white-space: nowrap; padding: 17px 30px;
-  border: 1px solid #000; background: transparent; color: #000;
+  border: 1px solid var(--fg); background: transparent; color: var(--fg);
   overflow: hidden; isolation: isolate; cursor: pointer; will-change: transform;
   transition: color .4s cubic-bezier(.65,.05,.36,1);
 }
 .ws-btn__label { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 14px; }
 .ws-btn::before {
   content: ""; position: absolute; inset: 0; z-index: 0;
-  background: var(--ws-sweep, #000);
+  background: var(--ws-sweep, var(--fg));
   transform: scaleX(0); transform-origin: right center;
   transition: transform .45s cubic-bezier(.65,.05,.36,1);
 }
 @media (hover: hover) and (pointer: fine) {
-  .ws-btn:hover { color: var(--ws-sweep-text, #fff); }
+  .ws-btn:hover { color: var(--ws-sweep-text, var(--bg)); }
   /* sweep in from the left on hover, out to the right on release */
   .ws-btn:hover::before { transform: scaleX(1); transform-origin: left center; }
 }
-.ws-btn--outline-dark { background: transparent; color: #000; border-color: #000; --ws-sweep: #000; --ws-sweep-text: #fff; }
-.ws-btn--solid-dark   { background: #000; color: #fff; border-color: #000; --ws-sweep: #fff; --ws-sweep-text: #000; }
-.ws-btn--solid-light  { background: #fff; color: #000; border-color: #fff; --ws-sweep: #000; --ws-sweep-text: #fff; }
+/* outline/solid-dark live on PRIMARY surfaces → flip with --fg/--bg.
+   solid-light lives on INVERTED accent sections → flip with the *-inverse pair
+   so the button keeps contrast against the inverted surface in both themes. */
+.ws-btn--outline-dark { background: transparent; color: var(--fg); border-color: var(--fg); --ws-sweep: var(--fg); --ws-sweep-text: var(--bg); }
+.ws-btn--solid-dark   { background: var(--fg); color: var(--bg); border-color: var(--fg); --ws-sweep: var(--bg); --ws-sweep-text: var(--fg); }
+.ws-btn--solid-light  { background: var(--fg-inverse); color: var(--bg-inverse); border-color: var(--fg-inverse); --ws-sweep: var(--bg-inverse); --ws-sweep-text: var(--fg-inverse); }
 .ws-btn:disabled { cursor: default; }
 
 /* ── StopDoing sequential timeline ─────────────────────────── */
 .stop-rail {
   position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
-  background: var(--color-gray-200);
+  background: var(--border-soft);
 }
 .stop-rail__fill {
   position: absolute; left: 0; top: 0; width: 100%; height: 100%;
-  background: #000; transform: scaleY(0); transform-origin: top center;
+  background: var(--fg); transform: scaleY(0); transform-origin: top center;
 }
 
 /* ── Integrations marquee ──────────────────────────────────── */
@@ -266,11 +346,11 @@ html.ws-cursor-on .field input, html.ws-cursor-on .field textarea { cursor: text
   font-weight: 500;
   font-size: clamp(16px, 1.7vw, 22px);
   letter-spacing: -0.01em;
-  color: var(--color-gray-500);
+  color: var(--text-muted);
   white-space: nowrap;
   transition: color 160ms linear;
 }
-.marquee__item:hover { color: #000; }
+.marquee__item:hover { color: var(--fg); }
 .marquee__logo {
   width: clamp(18px, 1.8vw, 24px);
   height: clamp(18px, 1.8vw, 24px);
@@ -316,16 +396,36 @@ html.ws-cursor-on .field input, html.ws-cursor-on .field textarea { cursor: text
 .ws-nav {
   font-family: var(--font-mono), monospace;
   font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
-  color: #000; position: relative; padding: 4px 0; white-space: nowrap;
+  color: var(--fg); position: relative; padding: 4px 0; white-space: nowrap;
 }
 .ws-nav::after {
   content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
-  background: #000; transform: scaleX(0); transform-origin: left center;
+  background: var(--fg); transform: scaleX(0); transform-origin: left center;
   transition: transform .3s cubic-bezier(.65, .05, .36, 1);
 }
 .ws-nav.is-active::after { transform: scaleX(1); }
 @media (hover: hover) and (pointer: fine) {
   .ws-nav:hover::after { transform: scaleX(1); }
+}
+
+/* ── Theme (color-invert) toggle ───────────────────────────── */
+.ws-theme-toggle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 1px solid var(--border-mid); background: transparent;
+  color: var(--fg); padding: 0; flex: none;
+}
+.ws-theme-toggle__glyph { display: block; }
+.ws-theme-toggle.is-dark .ws-theme-toggle__glyph { transform: rotate(180deg); }
+.ws-theme-toggle:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) {
+  .ws-theme-toggle:hover { border-color: var(--fg); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ws-theme-toggle.is-ready { transition: border-color .25s ease, color .25s ease; }
+  .ws-theme-toggle.is-ready .ws-theme-toggle__glyph {
+    transition: transform .5s cubic-bezier(.65, .05, .36, 1);
+  }
 }
 
 /* ── About page layout ─────────────────────────────────────── */

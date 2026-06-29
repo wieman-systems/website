@@ -20,11 +20,11 @@ function SectionLead({ label, title }: { label: string; title: string }) {
         className="eyebrow"
         style={{
           fontFamily: "var(--font-mono), monospace",
-          color: "var(--color-gray-600)",
+          color: "var(--text-eyebrow)",
           marginBottom: 18,
         }}
       >
-        <span style={{ width: 22, height: 1, background: "#000", opacity: 0.35, display: "inline-block" }} />
+        <span style={{ width: 22, height: 1, background: "var(--fg)", opacity: 0.35, display: "inline-block" }} />
         <ScrambleText text={label} />
       </div>
       <h2
@@ -89,9 +89,8 @@ export default function About() {
 
       <main>
         {/* ── Intro ─────────────────────────────────────────────── */}
-        <section style={{ position: "relative", borderBottom: "1px solid #000", overflow: "hidden" }}>
+        <section style={{ position: "relative", borderBottom: "1px solid var(--fg)", overflow: "hidden" }}>
           <BlueprintGrid
-            color="#000"
             opacity={0.05}
             unit={52}
             fade={false}
@@ -109,9 +108,9 @@ export default function About() {
               <div>
                 <div
                   className="eyebrow"
-                  style={{ fontFamily: "var(--font-mono), monospace", color: "var(--color-gray-600)", marginBottom: 24 }}
+                  style={{ fontFamily: "var(--font-mono), monospace", color: "var(--text-eyebrow)", marginBottom: 24 }}
                 >
-                  <span style={{ width: 22, height: 1, background: "#000", opacity: 0.35, display: "inline-block" }} />
+                  <span style={{ width: 22, height: 1, background: "var(--fg)", opacity: 0.35, display: "inline-block" }} />
                   <ScrambleText text="ABOUT" />
                 </div>
                 <h1
@@ -133,7 +132,7 @@ export default function About() {
                     fontFamily: "var(--font-display), sans-serif",
                     fontSize: "clamp(16px, 1.4vw, 19px)",
                     lineHeight: 1.6,
-                    color: "var(--color-gray-700)",
+                    color: "rgba(var(--ink-rgb), 0.72)",
                     maxWidth: 520,
                   }}
                 >
@@ -151,8 +150,8 @@ export default function About() {
         </section>
 
         {/* ── How I work ────────────────────────────────────────── */}
-        <section style={{ position: "relative", borderBottom: "1px solid #000", overflow: "hidden" }}>
-          <BlueprintGrid color="#000" opacity={0.04} unit={52} />
+        <section style={{ position: "relative", borderBottom: "1px solid var(--fg)", overflow: "hidden" }}>
+          <BlueprintGrid opacity={0.04} unit={52} />
           <div
             className="ws-wrap"
             style={{ position: "relative", zIndex: 1, padding: "clamp(72px, 11vh, 120px) var(--gutter)" }}
@@ -161,7 +160,7 @@ export default function About() {
             <div className="about-grid">
               {PRINCIPLES.map((p, i) => (
                 <Reveal key={p.t} delay={i * 0.05}>
-                  <div style={{ borderTop: "1px solid rgba(0,0,0,0.14)", padding: "clamp(22px, 3vh, 30px) 0" }}>
+                  <div style={{ borderTop: "1px solid rgba(var(--ink-rgb), 0.14)", padding: "clamp(22px, 3vh, 30px) 0" }}>
                     <h3
                       style={{
                         fontFamily: "var(--font-display), sans-serif",
@@ -169,7 +168,7 @@ export default function About() {
                         fontSize: 18,
                         letterSpacing: "-0.01em",
                         marginBottom: 10,
-                        color: "#000",
+                        color: "var(--fg)",
                       }}
                     >
                       {p.t}
@@ -179,7 +178,7 @@ export default function About() {
                         fontFamily: "var(--font-display), sans-serif",
                         fontSize: 15.5,
                         lineHeight: 1.6,
-                        color: "var(--color-gray-700)",
+                        color: "rgba(var(--ink-rgb), 0.72)",
                         maxWidth: 460,
                         margin: 0,
                       }}
@@ -194,8 +193,8 @@ export default function About() {
         </section>
 
         {/* ── Who I work with ───────────────────────────────────── */}
-        <section style={{ position: "relative", background: "#000", color: "#fff", overflow: "hidden" }}>
-          <BlueprintGrid color="#fff" opacity={0.05} unit={52} />
+        <section style={{ position: "relative", background: "var(--bg-inverse)", color: "var(--fg-inverse)", overflow: "hidden" }}>
+          <BlueprintGrid tone="inverse" opacity={0.05} unit={52} />
           <div
             className="ws-wrap"
             style={{ position: "relative", zIndex: 1, padding: "clamp(84px, 13vh, 150px) var(--gutter)" }}
@@ -203,9 +202,9 @@ export default function About() {
             <Reveal>
               <div
                 className="eyebrow"
-                style={{ fontFamily: "var(--font-mono), monospace", color: "var(--color-gray-400)", marginBottom: 26 }}
+                style={{ fontFamily: "var(--font-mono), monospace", color: "rgba(var(--ink-inverse-rgb), 0.62)", marginBottom: 26 }}
               >
-                <span style={{ width: 22, height: 1, background: "#fff", opacity: 0.4, display: "inline-block" }} />
+                <span style={{ width: 22, height: 1, background: "var(--fg-inverse)", opacity: 0.4, display: "inline-block" }} />
                 <ScrambleText text="WHO I WORK WITH" />
               </div>
               <p
@@ -227,7 +226,7 @@ export default function About() {
                   fontFamily: "var(--font-display), sans-serif",
                   fontSize: "clamp(16px, 1.4vw, 19px)",
                   lineHeight: 1.6,
-                  color: "var(--color-gray-400)",
+                  color: "rgba(var(--ink-inverse-rgb), 0.7)",
                   maxWidth: 560,
                   marginTop: "clamp(22px, 3vh, 30px)",
                 }}
@@ -240,8 +239,8 @@ export default function About() {
         </section>
 
         {/* ── What I've built ───────────────────────────────────── */}
-        <section style={{ position: "relative", borderTop: "1px solid #000", borderBottom: "1px solid #000", overflow: "hidden" }}>
-          <BlueprintGrid color="#000" opacity={0.04} unit={52} />
+        <section style={{ position: "relative", borderTop: "1px solid var(--fg)", borderBottom: "1px solid var(--fg)", overflow: "hidden" }}>
+          <BlueprintGrid opacity={0.04} unit={52} />
           <div
             className="ws-wrap"
             style={{ position: "relative", zIndex: 1, padding: "clamp(72px, 11vh, 120px) var(--gutter)" }}
@@ -257,7 +256,7 @@ export default function About() {
                         fontFamily: "var(--font-display), sans-serif",
                         fontSize: 15.5,
                         lineHeight: 1.6,
-                        color: "var(--color-gray-700)",
+                        color: "rgba(var(--ink-rgb), 0.72)",
                         margin: 0,
                       }}
                     >
