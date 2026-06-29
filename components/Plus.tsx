@@ -9,7 +9,7 @@ interface PlusProps {
 export default function Plus({
   size = 16,
   stroke = 1,
-  color = "#000",
+  color = "var(--fg)",
   opacity = 1,
   style,
 }: PlusProps) {

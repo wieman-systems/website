@@ -1,6 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, Space_Mono } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/ThemeProvider";
+
+// Runs synchronously before first paint to commit the theme onto
+// <html data-theme>, so a returning dark-mode visitor loads dark with no white
+// flash. Defaults to LIGHT — the OS preference is ignored; dark only applies
+// when the visitor explicitly chose it (stored as 'dark'). CSP allows inline
+// scripts (script-src 'self' 'unsafe-inline').
+const NO_FLASH_THEME = `(function(){try{var d=localStorage.getItem('ws-theme')==='dark',t=d?'dark':'light',r=document.documentElement;r.setAttribute('data-theme',t);var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',d?'#0b0b0c':'#ffffff');}catch(e){}})();`;
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-display",
@@ -36,7 +44,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#ffffff",
-  colorScheme: "light",
+  colorScheme: "light dark",
 };
 
 export default function RootLayout({
@@ -45,9 +53,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${spaceGrotesk.variable} ${spaceMono.variable}`}>
-      <body style={{ fontFamily: "var(--font-display), sans-serif" }}>
-        {children}
+    <html
+      lang="en"
+      className={`${spaceGrotesk.variable} ${spaceMono.variable}`}
+      suppressHydrationWarning
+    >
+      <body>
+        <script dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME }} />
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

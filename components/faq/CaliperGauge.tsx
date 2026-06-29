@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useThemeInk } from "../ThemeProvider";
 
 /**
  * THE CALIPER — a living dimension gauge that measures the FAQ. A vertical
@@ -33,6 +34,8 @@ export default function CaliperGauge({ activeIndex = null, itemsRef, count = 5 }
   const activeRef = useRef<number | null>(activeIndex);
   activeRef.current = activeIndex;
   const kickRef = useRef<(() => void) | null>(null);
+  const ink = useThemeInk("primary"); // hairlines + readout text
+  const panel = useThemeInk("inverse"); // readout chip background (page bg)
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -145,16 +148,16 @@ export default function CaliperGauge({ activeIndex = null, itemsRef, count = 5 }
       ctx.lineJoin = "miter";
 
       // ── beam + graduated scale (spans the card range) ───────────────────
-      ctx.strokeStyle = "rgba(0,0,0,0.5)";
+      ctx.strokeStyle = `rgba(${ink},0.5)`;
       ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(beamX, yA); ctx.lineTo(beamX, yB); ctx.stroke();
-      ctx.fillStyle = "rgba(0,0,0,0.38)";
+      ctx.fillStyle = `rgba(${ink},0.38)`;
       ctx.font = `400 8px ui-monospace, SFMono-Regular, Menlo, monospace`;
       ctx.textBaseline = "middle";
       let k = 0;
       for (let y = yA; y <= yB + 0.5; y += 12, k++) {
         const major = k % 4 === 0;
-        ctx.strokeStyle = major ? "rgba(0,0,0,0.42)" : "rgba(0,0,0,0.22)";
+        ctx.strokeStyle = major ? `rgba(${ink},0.42)` : `rgba(${ink},0.22)`;
         ctx.beginPath();
         ctx.moveTo(beamX, Math.round(y) + 0.5);
         ctx.lineTo(beamX + (major ? 10 : 5), Math.round(y) + 0.5);
@@ -163,24 +166,24 @@ export default function CaliperGauge({ activeIndex = null, itemsRef, count = 5 }
       }
 
       // ── sliding frame + jaws ────────────────────────────────────────────
-      ctx.strokeStyle = "rgba(0,0,0,0.85)";
+      ctx.strokeStyle = `rgba(${ink},0.85)`;
       ctx.lineWidth = LINE_W;
       ctx.beginPath(); ctx.moveTo(beamX - 4, jawTop); ctx.lineTo(beamX - 4, jawBot); ctx.stroke();
 
       const hot = active != null || dragging;
       const drawJaw = (y: number) => {
-        ctx.strokeStyle = hot ? "rgba(0,0,0,1)" : "rgba(0,0,0,0.85)";
+        ctx.strokeStyle = hot ? `rgba(${ink},1)` : `rgba(${ink},0.85)`;
         ctx.lineWidth = LINE_W;
         ctx.beginPath(); ctx.moveTo(beamX - 4, y); ctx.lineTo(tipX, y); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(tipX, y - 7); ctx.lineTo(tipX, y + 7); ctx.stroke();
-        ctx.strokeStyle = "rgba(0,0,0,0.5)"; ctx.lineWidth = 1;
+        ctx.strokeStyle = `rgba(${ink},0.5)`; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(tipX - 4, y); ctx.lineTo(tipX + 4, y); ctx.stroke();
       };
       drawJaw(jawTop);
       drawJaw(jawBot);
 
       // measured-span line between jaw tips
-      ctx.strokeStyle = `rgba(0,0,0,${hot ? 0.5 : 0.22})`;
+      ctx.strokeStyle = `rgba(${ink},${hot ? 0.5 : 0.22})`;
       ctx.lineWidth = 1;
       ctx.setLineDash([2, 3]);
       ctx.beginPath(); ctx.moveTo(tipX, jawTop); ctx.lineTo(tipX, jawBot); ctx.stroke();
@@ -191,15 +194,15 @@ export default function CaliperGauge({ activeIndex = null, itemsRef, count = 5 }
       const chipW = 96, chipH = 40;
       const chipX = clamp(tipX + 6, 6, W - chipW - 10);
       const chipY = clamp((jawTop + jawBot) / 2 - chipH / 2, 6, H - chipH - 6);
-      ctx.fillStyle = "#000"; ctx.fillRect(chipX + 6, chipY + 6, chipW, chipH);
-      ctx.fillStyle = "#fff"; ctx.fillRect(chipX, chipY, chipW, chipH);
-      ctx.strokeStyle = "#000"; ctx.lineWidth = 1;
+      ctx.fillStyle = `rgb(${ink})`; ctx.fillRect(chipX + 6, chipY + 6, chipW, chipH);
+      ctx.fillStyle = `rgb(${panel})`; ctx.fillRect(chipX, chipY, chipW, chipH);
+      ctx.strokeStyle = `rgb(${ink})`; ctx.lineWidth = 1;
       ctx.strokeRect(chipX + 0.5, chipY + 0.5, chipW, chipH);
-      ctx.fillStyle = "#000"; ctx.textBaseline = "alphabetic";
+      ctx.fillStyle = `rgb(${ink})`; ctx.textBaseline = "alphabetic";
       ctx.font = `700 13px ui-monospace, SFMono-Regular, Menlo, monospace`;
       ctx.fillText(`Δ ${String(span).padStart(3, "0")} u`, chipX + 9, chipY + 20);
       ctx.font = `400 9px ui-monospace, SFMono-Regular, Menlo, monospace`;
-      ctx.fillStyle = "rgba(0,0,0,0.6)";
+      ctx.fillStyle = `rgba(${ink},0.6)`;
       const tag = dragging
         ? "DRAG"
         : active != null
@@ -264,7 +267,7 @@ export default function CaliperGauge({ activeIndex = null, itemsRef, count = 5 }
         window.removeEventListener("mouseup", onUp);
       }
     };
-  }, [count, itemsRef]);
+  }, [count, itemsRef, ink, panel]);
 
   // Kick the (otherwise idle) render loop whenever the hovered card changes.
   useEffect(() => { kickRef.current?.(); }, [activeIndex]);

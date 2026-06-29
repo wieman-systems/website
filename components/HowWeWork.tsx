@@ -30,13 +30,12 @@ export default function HowWeWork() {
     <section
       style={{
         position: "relative",
-        background: "var(--color-gray-100)",
-        borderTop: "1px solid #000",
+        background: "var(--surface-2)",
+        borderTop: "1px solid var(--fg)",
         overflow: "hidden",
       }}
     >
       <BlueprintGrid
-        color="#000"
         opacity={0.05}
         unit={52}
         fade={false}
@@ -60,7 +59,7 @@ export default function HowWeWork() {
             fontFamily: "var(--font-display), sans-serif",
             fontSize: "clamp(16px, 1.4vw, 19px)",
             lineHeight: 1.6,
-            color: "var(--color-gray-700)",
+            color: "rgba(var(--ink-rgb), 0.72)",
             maxWidth: 560,
             marginTop: -28,
             marginBottom: "clamp(48px, 7vh, 72px)",
@@ -93,11 +92,11 @@ export default function HowWeWork() {
                   style={{
                     flex: 1,
                     height: 1,
-                    background: "#000",
+                    background: "var(--fg)",
                     opacity: 0.18,
                   }}
                 />
-                <Plus size={11} color="#000" opacity={0.4} />
+                <Plus size={11} opacity={0.4} />
               </div>
               <h3
                 style={{
@@ -115,7 +114,7 @@ export default function HowWeWork() {
                   fontFamily: "var(--font-display), sans-serif",
                   fontSize: 16,
                   lineHeight: 1.6,
-                  color: "var(--color-gray-700)",
+                  color: "rgba(var(--ink-rgb), 0.72)",
                   maxWidth: 320,
                 }}
               >

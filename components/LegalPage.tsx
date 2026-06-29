@@ -44,9 +44,8 @@ export default function LegalPage({
 
       <main>
         {/* ── Header ────────────────────────────────────────────── */}
-        <section style={{ position: "relative", borderBottom: "1px solid #000", overflow: "hidden" }}>
+        <section style={{ position: "relative", borderBottom: "1px solid var(--fg)", overflow: "hidden" }}>
           <BlueprintGrid
-            color="#000"
             opacity={0.05}
             unit={52}
             fade={false}
@@ -62,9 +61,9 @@ export default function LegalPage({
           >
             <div
               className="eyebrow"
-              style={{ fontFamily: "var(--font-mono), monospace", color: "var(--color-gray-600)", marginBottom: 24 }}
+              style={{ fontFamily: "var(--font-mono), monospace", color: "var(--text-eyebrow)", marginBottom: 24 }}
             >
-              <span style={{ width: 22, height: 1, background: "#000", opacity: 0.35, display: "inline-block" }} />
+              <span style={{ width: 22, height: 1, background: "var(--fg)", opacity: 0.35, display: "inline-block" }} />
               <ScrambleText text={eyebrow} />
             </div>
             <h1
@@ -86,7 +85,7 @@ export default function LegalPage({
                 fontFamily: "var(--font-mono), monospace",
                 fontSize: 12,
                 letterSpacing: "0.04em",
-                color: "var(--color-gray-500)",
+                color: "var(--text-muted)",
                 marginBottom: "clamp(24px, 3.5vh, 34px)",
               }}
             >
@@ -97,7 +96,7 @@ export default function LegalPage({
                 fontFamily: "var(--font-display), sans-serif",
                 fontSize: "clamp(16px, 1.4vw, 19px)",
                 lineHeight: 1.6,
-                color: "var(--color-gray-700)",
+                color: "rgba(var(--ink-rgb), 0.72)",
                 maxWidth: 680,
               }}
             >
@@ -107,8 +106,8 @@ export default function LegalPage({
         </section>
 
         {/* ── Body ──────────────────────────────────────────────── */}
-        <section style={{ position: "relative", borderBottom: "1px solid #000", overflow: "hidden" }}>
-          <BlueprintGrid color="#000" opacity={0.04} unit={52} />
+        <section style={{ position: "relative", borderBottom: "1px solid var(--fg)", overflow: "hidden" }}>
+          <BlueprintGrid opacity={0.04} unit={52} />
           <div
             className="ws-wrap"
             style={{ position: "relative", zIndex: 1, padding: "clamp(56px, 9vh, 104px) var(--gutter)" }}
@@ -123,10 +122,10 @@ export default function LegalPage({
                       fontSize: "clamp(19px, 2vw, 24px)",
                       letterSpacing: "-0.02em",
                       marginBottom: 14,
-                      color: "#000",
+                      color: "var(--fg)",
                     }}
                   >
-                    <span style={{ color: "var(--color-gray-400)", marginRight: 12, fontVariantNumeric: "tabular-nums" }}>
+                    <span style={{ color: "var(--text-muted)", marginRight: 12, fontVariantNumeric: "tabular-nums" }}>
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     {s.heading}
@@ -138,7 +137,7 @@ export default function LegalPage({
                         fontFamily: "var(--font-display), sans-serif",
                         fontSize: 15.5,
                         lineHeight: 1.68,
-                        color: "var(--color-gray-700)",
+                        color: "rgba(var(--ink-rgb), 0.72)",
                         margin: "0 0 12px",
                       }}
                     >
@@ -154,7 +153,7 @@ export default function LegalPage({
                             fontFamily: "var(--font-display), sans-serif",
                             fontSize: 15.5,
                             lineHeight: 1.68,
-                            color: "var(--color-gray-700)",
+                            color: "rgba(var(--ink-rgb), 0.72)",
                             marginBottom: 6,
                           }}
                         >

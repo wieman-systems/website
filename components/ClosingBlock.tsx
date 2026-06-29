@@ -24,15 +24,15 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
       className="cta-shell"
       style={{
         position: "relative",
-        background: "#000",
-        color: "#fff",
+        background: "var(--bg-inverse)",
+        color: "var(--fg-inverse)",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
       }}
     >
       <InteractiveBrandGrid
-        color="#fff"
+        tone="inverse"
         height="82%"
         opacity={0.9}
         unit={20}
@@ -48,7 +48,7 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
         ]}
       />
       <BlueprintGrid
-        color="#fff"
+        tone="inverse"
         opacity={0.04}
         fade={false}
         unit={52}
@@ -79,11 +79,11 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
             className="eyebrow"
             style={{
               fontFamily: "var(--font-mono), monospace",
-              color: "var(--color-gray-300)",
+              color: "rgba(var(--ink-inverse-rgb), 0.72)",
               marginBottom: 26,
             }}
           >
-            <Plus size={12} color="#fff" opacity={0.55} />
+            <Plus size={12} color="var(--fg-inverse)" opacity={0.55} />
             <ScrambleText text="Start here" />
           </div>
           <h2
@@ -93,7 +93,7 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
               maxWidth: 980,
               marginBottom: 42,
               fontFamily: "var(--font-display), sans-serif",
-              color: "#fff",
+              color: "var(--fg-inverse)",
             }}
           >
             Find out what your team could stop doing by hand.
@@ -144,6 +144,7 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
               alt="Wieman Systems"
               width={60}
               height={60}
+              data-logo
               style={{ height: "clamp(38px, 11vw, 60px)", width: "auto" }}
             />
             <span
@@ -155,7 +156,7 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
                   fontWeight: 700,
                   fontSize: "clamp(14px, 4.2vw, 18px)",
                   letterSpacing: "0.14em",
-                  color: "#fff",
+                  color: "var(--fg-inverse)",
                 }}
               >
                 WIEMAN
@@ -166,7 +167,7 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
                   fontWeight: 500,
                   fontSize: "clamp(9px, 2.7vw, 11px)",
                   letterSpacing: "0.46em",
-                  color: "#fff",
+                  color: "var(--fg-inverse)",
                   marginTop: 4,
                 }}
               >
@@ -193,9 +194,9 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
                 fontFamily: "var(--font-mono), monospace",
                 fontSize: "clamp(12px, 3.4vw, 15px)",
                 letterSpacing: "0.02em",
-                color: "#fff",
+                color: "var(--fg-inverse)",
                 textDecoration: "none",
-                borderBottom: "1px solid #fff",
+                borderBottom: "1px solid var(--fg-inverse)",
                 paddingBottom: 3,
               }}
             >
@@ -210,10 +211,10 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
                 letterSpacing: "0.04em",
               }}
             >
-              <a href="/privacy" style={{ color: "var(--color-gray-400)", textDecoration: "none" }}>
+              <a href="/privacy" style={{ color: "rgba(var(--ink-inverse-rgb), 0.6)", textDecoration: "none" }}>
                 Privacy
               </a>
-              <a href="/terms" style={{ color: "var(--color-gray-400)", textDecoration: "none" }}>
+              <a href="/terms" style={{ color: "rgba(var(--ink-inverse-rgb), 0.6)", textDecoration: "none" }}>
                 Terms
               </a>
             </div>
@@ -221,7 +222,7 @@ export default function ClosingBlock({ onBook }: ClosingBlockProps) {
               style={{
                 fontFamily: "var(--font-mono), monospace",
                 fontSize: 11,
-                color: "var(--color-gray-400)",
+                color: "rgba(var(--ink-inverse-rgb), 0.6)",
                 letterSpacing: "1.4px",
               }}
             >

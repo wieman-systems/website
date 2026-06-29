@@ -27,10 +27,9 @@ const items = [
 export default function WhatWeDo() {
   return (
     <section
-      style={{ position: "relative", borderTop: "1px solid #000", overflow: "hidden" }}
+      style={{ position: "relative", borderTop: "1px solid var(--fg)", overflow: "hidden" }}
     >
       <BlueprintGrid
-        color="#000"
         opacity={0.05}
         unit={52}
         fade={false}
@@ -57,7 +56,7 @@ export default function WhatWeDo() {
                   fontFamily: "var(--font-mono), monospace",
                   fontSize: 12,
                   letterSpacing: "0.18em",
-                  color: "var(--color-gray-500)",
+                  color: "var(--text-muted)",
                   marginBottom: 24,
                 }}
               >
@@ -77,7 +76,7 @@ export default function WhatWeDo() {
                   fontFamily: "var(--font-display), sans-serif",
                   fontSize: 16,
                   lineHeight: 1.62,
-                  color: "var(--color-gray-700)",
+                  color: "rgba(var(--ink-rgb), 0.72)",
                   maxWidth: 340,
                 }}
               >

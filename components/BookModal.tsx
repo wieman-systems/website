@@ -136,7 +136,7 @@ export default function BookModal({ open, onClose }: BookModalProps) {
             border: "none",
             fontFamily: "var(--font-mono), monospace",
             fontSize: 18,
-            color: "#000",
+            color: "var(--fg)",
             lineHeight: 1,
           }}
         >
@@ -147,7 +147,6 @@ export default function BookModal({ open, onClose }: BookModalProps) {
           <div style={{ padding: "56px 40px", textAlign: "center" }}>
             <Plus
               size={22}
-              color="#000"
               opacity={0.6}
               style={{ margin: "0 auto 24px" }}
             />
@@ -175,7 +174,7 @@ export default function BookModal({ open, onClose }: BookModalProps) {
             <div
               style={{
                 fontFamily: "var(--font-display), sans-serif",
-                color: "var(--color-gray-600)",
+                color: "var(--text-muted)",
                 marginBottom: 32,
                 fontSize: 15,
               }}
@@ -194,9 +193,9 @@ export default function BookModal({ open, onClose }: BookModalProps) {
                 textTransform: "uppercase",
                 padding: "11px 22px",
                 background: "transparent",
-                color: "#000",
-                border: "1px solid #000",
-                boxShadow: btnH ? "4px 4px 0 #000" : "none",
+                color: "var(--fg)",
+                border: "1px solid var(--fg)",
+                boxShadow: btnH ? "4px 4px 0 var(--fg)" : "none",
                 transition: "box-shadow 80ms linear",
               }}
             >
@@ -212,7 +211,7 @@ export default function BookModal({ open, onClose }: BookModalProps) {
                 marginBottom: 14,
               }}
             >
-              <Plus size={11} color="#000" opacity={0.5} /> Book a call
+              <Plus size={11} opacity={0.5} /> Book a call
             </div>
             <h3
               style={{
@@ -229,7 +228,7 @@ export default function BookModal({ open, onClose }: BookModalProps) {
               style={{
                 fontFamily: "var(--font-display), sans-serif",
                 fontSize: 14,
-                color: "var(--color-gray-600)",
+                color: "var(--text-muted)",
                 marginBottom: 30,
                 lineHeight: 1.55,
               }}
@@ -292,10 +291,10 @@ export default function BookModal({ open, onClose }: BookModalProps) {
                   letterSpacing: "0.08em",
                   textTransform: "uppercase",
                   padding: "15px 24px",
-                  background: valid && !submitting ? "#000" : "var(--color-gray-300)",
-                  color: valid && !submitting ? "#fff" : "var(--color-gray-500)",
+                  background: valid && !submitting ? "var(--fg)" : "var(--border-mid)",
+                  color: valid && !submitting ? "var(--bg)" : "var(--text-muted)",
                   border: "1px solid",
-                  borderColor: valid && !submitting ? "#000" : "var(--color-gray-300)",
+                  borderColor: valid && !submitting ? "var(--fg)" : "var(--border-mid)",
                   cursor: valid && !submitting ? "pointer" : "default",
                   transition: "background 80ms linear, color 80ms linear",
                 }}
@@ -309,7 +308,7 @@ export default function BookModal({ open, onClose }: BookModalProps) {
                     fontFamily: "var(--font-mono), monospace",
                     fontSize: 12,
                     lineHeight: 1.5,
-                    color: "#b00020",
+                    color: "var(--danger)",
                   }}
                 >
                   {error}

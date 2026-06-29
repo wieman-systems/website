@@ -66,16 +66,16 @@ export default function Hero({ onBook }: HeroProps) {
       style={{
         position: "relative",
         overflow: "hidden",
-        background: "#fff",
-        color: "#000",
-        borderBottom: "1px solid #000",
+        background: "var(--bg)",
+        color: "var(--fg)",
+        borderBottom: "1px solid var(--fg)",
         display: "flex",
         flexDirection: "column",
       }}
     >
       {/* Dynamic, cursor-reactive brand grid that draws itself in on load. */}
       <InteractiveBrandGrid
-        color="#000"
+        tone="primary"
         height="100%"
         opacity={1}
         unit={20}
@@ -93,7 +93,6 @@ export default function Hero({ onBook }: HeroProps) {
 
       {/* Subtle graph-paper overlay */}
       <BlueprintGrid
-        color="#000"
         opacity={0.04}
         unit={52}
         style={{ height: "46%", bottom: "auto" }}
@@ -134,7 +133,7 @@ export default function Hero({ onBook }: HeroProps) {
           style={{
             width: 48,
             height: 2,
-            background: "#000",
+            background: "var(--fg)",
             margin: "clamp(26px,3.6vh,38px) 0 clamp(22px,3vh,30px)",
           }}
         />
@@ -145,7 +144,7 @@ export default function Hero({ onBook }: HeroProps) {
             fontFamily: "var(--font-display), sans-serif",
             fontSize: "clamp(16px, 1.4vw, 19px)",
             lineHeight: 1.55,
-            color: "var(--color-gray-700)",
+            color: "rgba(var(--ink-rgb), 0.72)",
             maxWidth: 420,
             marginBottom: "clamp(32px,4.5vh,44px)",
           }}

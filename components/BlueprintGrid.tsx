@@ -1,5 +1,10 @@
+"use client";
+
+import { useThemeInk } from "./ThemeProvider";
+
 interface BlueprintGridProps {
-  color?: string;
+  /** Which surface this grid sits on — picks the ink that flips with the theme. */
+  tone?: "primary" | "inverse";
   opacity?: number;
   unit?: number;
   fade?: boolean;
@@ -7,17 +12,14 @@ interface BlueprintGridProps {
 }
 
 export default function BlueprintGrid({
-  color = "#000",
+  tone = "primary",
   opacity = 0.05,
   unit = 48,
   fade = true,
   style,
 }: BlueprintGridProps) {
-  const hex = color.replace("#", "");
-  const r = parseInt(hex.slice(0, 2), 16);
-  const g = parseInt(hex.slice(2, 4), 16);
-  const b = parseInt(hex.slice(4, 6), 16);
-  const line = `rgba(${r},${g},${b},${opacity})`;
+  const ink = useThemeInk(tone);
+  const line = `rgba(${ink}, ${opacity})`;
 
   return (
     <div
