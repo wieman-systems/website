@@ -17,8 +17,11 @@ const escapeHtml = (s: string) =>
 // call Resend (protects the inbox and the shared daily/monthly send quota).
 const ALLOWED_ORIGINS = ["https://wiemansystems.com", "https://www.wiemansystems.com"];
 function originAllowed(o: string | null): boolean {
-  // empty Origin = same-origin / server-to-server / curl; allow preview deploys too
-  return !o || ALLOWED_ORIGINS.includes(o) || /^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(o);
+  // Require an Origin on the allowlist: our own domains or THIS project's own
+  // preview deploys. The form always sends a same-origin Origin on POST; a
+  // missing or third-party Origin (a bare curl relay, or an attacker page on
+  // some other *.vercel.app) is rejected before we ever call Resend.
+  return !!o && (ALLOWED_ORIGINS.includes(o) || /^https:\/\/website-[a-z0-9-]+\.vercel\.app$/.test(o));
 }
 
 // Best-effort in-memory rate limit (per warm instance): 5 sends / 10 min / IP.
