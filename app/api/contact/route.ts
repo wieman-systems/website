@@ -12,7 +12,40 @@ const escapeHtml = (s: string) =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 
+// This endpoint relays mail on our Resend-verified domain, so it must not be an
+// open relay: reject genuine cross-site POSTs and throttle floods before we ever
+// call Resend (protects the inbox and the shared daily/monthly send quota).
+const ALLOWED_ORIGINS = ["https://wiemansystems.com", "https://www.wiemansystems.com"];
+function originAllowed(o: string | null): boolean {
+  // empty Origin = same-origin / server-to-server / curl; allow preview deploys too
+  return !o || ALLOWED_ORIGINS.includes(o) || /^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(o);
+}
+
+// Best-effort in-memory rate limit (per warm instance): 5 sends / 10 min / IP.
+const HITS = new Map<string, number[]>();
+function rateLimited(ip: string): boolean {
+  const now = Date.now();
+  const win = 6e5;
+  const arr = (HITS.get(ip) || []).filter((t) => now - t < win);
+  arr.push(now);
+  HITS.set(ip, arr);
+  if (HITS.size > 5000) HITS.clear();
+  return arr.length > 5;
+}
+
 export async function POST(req: NextRequest) {
+  // CSRF/origin guard — reject genuine cross-site POSTs.
+  if (!originAllowed(req.headers.get("origin"))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "unknown";
+  if (rateLimited(ip)) {
+    return NextResponse.json(
+      { error: "Too many requests — please try again in a few minutes." },
+      { status: 429 }
+    );
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await req.json();
@@ -32,6 +65,14 @@ export async function POST(req: NextRequest) {
   if (!name || !/^\S+@\S+\.\S+$/.test(email)) {
     return NextResponse.json(
       { error: "Please provide your name and a valid email." },
+      { status: 422 }
+    );
+  }
+
+  // Length caps at the trust boundary — keep subjects sane and the inbox tidy.
+  if (name.length > 120 || email.length > 254 || company.length > 120 || need.length > 5000) {
+    return NextResponse.json(
+      { error: "One or more fields are too long." },
       { status: 422 }
     );
   }
